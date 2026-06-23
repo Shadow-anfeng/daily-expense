@@ -457,6 +457,19 @@
 
     .danger:hover { color: var(--accent-2); }
 
+    .inline-editor {
+      grid-column: 1 / -1;
+      display: grid;
+      gap: 10px;
+      width: 100%;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+
+    .inline-editor .actions {
+      justify-content: flex-start;
+    }
+
     .stat-card {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -847,6 +860,7 @@
     };
 
     let data = loadData();
+    let editingExpenseId = "";
 
     const el = (id) => document.getElementById(id);
     const money = (n) => `¥${Number(n || 0).toFixed(2)}`;
@@ -1128,6 +1142,7 @@
 
     function expenseRow(item) {
       const isRent = item.name.includes("房租");
+      const isEditing = editingExpenseId === item.id;
       return `
         <article class="expense-item">
           <div>
@@ -1140,7 +1155,43 @@
             <button class="mini-btn" title="编辑" aria-label="编辑" data-edit-expense="${item.id}">✎</button>
             <button class="mini-btn danger" title="删除" aria-label="删除" data-delete-expense="${item.id}">×</button>
           </div>
+          ${isEditing ? inlineExpenseEditor(item) : ""}
         </article>
+      `;
+    }
+
+    function inlineExpenseEditor(item) {
+      return `
+        <form class="inline-editor" data-inline-expense-form="${item.id}">
+          <div class="two">
+            <div class="field">
+              <label>名称</label>
+              <input name="name" required value="${escapeHtml(item.name)}">
+            </div>
+            <div class="field">
+              <label>金额</label>
+              <input name="amount" type="number" step="0.01" min="0" required value="${Number(item.amount || 0)}">
+            </div>
+          </div>
+          <div class="two">
+            <div class="field">
+              <label>日期</label>
+              <input name="date" type="date" required value="${item.date}">
+            </div>
+            <div class="field">
+              <label>分类</label>
+              <select name="category">${categories.map((name) => `<option value="${name}" ${name === item.category ? "selected" : ""}>${name}</option>`).join("")}</select>
+            </div>
+          </div>
+          <div class="field">
+            <label>备注</label>
+            <input name="note" value="${escapeHtml(item.note || "")}">
+          </div>
+          <div class="actions">
+            <button class="primary" type="submit">保存</button>
+            <button class="ghost" type="button" data-cancel-inline-edit="true">取消</button>
+          </div>
+        </form>
       `;
     }
 
@@ -1430,19 +1481,16 @@
         renderTab();
       }
       if (target.dataset.editExpense) {
-        const item = data.expenses.find((expense) => expense.id === target.dataset.editExpense);
-        if (!item) return;
-        el("expenseFormTitle").textContent = "编辑花销";
-        el("expenseId").value = item.id;
-        el("expenseDate").value = item.date;
-        el("expenseAmount").value = item.amount;
-        el("expenseName").value = item.name;
-        el("expenseCategory").value = item.category;
-        el("expenseType").value = "daily";
-        el("expenseNote").value = item.note || "";
+        editingExpenseId = editingExpenseId === target.dataset.editExpense ? "" : target.dataset.editExpense;
+        render();
+      }
+      if (target.dataset.cancelInlineEdit) {
+        editingExpenseId = "";
+        render();
       }
       if (target.dataset.deleteExpense) {
         data.expenses = data.expenses.filter((expense) => expense.id !== target.dataset.deleteExpense);
+        if (editingExpenseId === target.dataset.deleteExpense) editingExpenseId = "";
         saveData();
         render();
         showToast("已删除");
@@ -1464,6 +1512,25 @@
         render();
         showToast("已删除");
       }
+    });
+
+    document.addEventListener("submit", (event) => {
+      const form = event.target.closest("[data-inline-expense-form]");
+      if (!form) return;
+      event.preventDefault();
+      const id = form.dataset.inlineExpenseForm;
+      const item = data.expenses.find((expense) => expense.id === id);
+      if (!item) return;
+      const formData = new FormData(form);
+      item.name = String(formData.get("name") || "").trim();
+      item.amount = Number(formData.get("amount") || 0);
+      item.date = String(formData.get("date") || item.date);
+      item.category = String(formData.get("category") || item.category);
+      item.note = String(formData.get("note") || "").trim();
+      editingExpenseId = "";
+      saveData();
+      render();
+      showToast("已修改");
     });
 
     el("monthPicker").addEventListener("change", (event) => {
