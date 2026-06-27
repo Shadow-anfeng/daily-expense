@@ -926,8 +926,30 @@
     const el = (id) => document.getElementById(id);
     const money = (n) => `¥${Number(n || 0).toFixed(2)}`;
     const compactMoney = (n) => `¥${Number(n || 0).toLocaleString("zh-CN", { maximumFractionDigits: 2 })}`;
+    const isValidMonthNumber = (month) => Number.isInteger(month) && month >= 1 && month <= 12;
+    const isValidDateParts = (year, month, day) => {
+      if (!Number.isInteger(year) || !isValidMonthNumber(month) || !Number.isInteger(day) || day < 1) return false;
+      return day <= new Date(year, month, 0).getDate();
+    };
+    function buildDate(year, month, day) {
+      if (!isValidDateParts(year, month, day)) return "";
+      return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
+    function normalizeMonthKey(value, fallback = "2026-05") {
+      const match = String(value || "").match(/^(\d{4})-(\d{1,2})$/);
+      if (match) {
+        const year = Number(match[1]);
+        const month = Number(match[2]);
+        if (Number.isInteger(year) && isValidMonthNumber(month)) return `${year}-${String(month).padStart(2, "0")}`;
+      }
+      const fallbackMatch = String(fallback || "").match(/^(\d{4})-(\d{1,2})$/);
+      if (fallbackMatch && isValidMonthNumber(Number(fallbackMatch[2]))) {
+        return `${fallbackMatch[1]}-${String(Number(fallbackMatch[2])).padStart(2, "0")}`;
+      }
+      return "2026-05";
+    }
     const monthText = (ym) => {
-      const [y, m] = ym.split("-");
+      const [y, m] = normalizeMonthKey(ym).split("-");
       return `${y}年${Number(m)}月`;
     };
     const dateDayText = (date) => `${Number(date.slice(5, 7))}月${Number(date.slice(8, 10))}日`;
@@ -997,6 +1019,7 @@
     }
 
     function monthBounds(ym) {
+      ym = normalizeMonthKey(ym, activeMonth);
       const [year, month] = ym.split("-").map(Number);
       const start = new Date(year, month - 1, 1);
       const end = new Date(year, month, 0);
@@ -1004,6 +1027,7 @@
     }
 
     function addMonths(ym, diff) {
+      ym = normalizeMonthKey(ym, activeMonth);
       const [year, month] = ym.split("-").map(Number);
       const d = new Date(year, month - 1 + diff, 1);
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -1094,14 +1118,15 @@
 
     function normalizeDate(input, context) {
       const text = String(input || "").trim();
-      let match = text.match(/(\d{4})[-/.年](\d{1,2})[-/.月](\d{1,2})/);
-      if (match) return `${match[1]}-${String(match[2]).padStart(2, "0")}-${String(match[3]).padStart(2, "0")}`;
-      match = text.match(/(\d{1,2})[-/.月](\d{1,2})/);
-      if (match) return `${context.year}-${String(match[1]).padStart(2, "0")}-${String(match[2]).padStart(2, "0")}`;
+      let match = text.match(/^\s*(\d{4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})\s*(?:日|\s|$)/);
+      if (match) return buildDate(Number(match[1]), Number(match[2]), Number(match[3]));
+      match = text.match(/^\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})\s*(?:日|\s|$)/);
+      if (match) return buildDate(context.year, Number(match[1]), Number(match[2]));
       return "";
     }
 
     function parseImportText(text, selectedMonth = activeMonth) {
+      selectedMonth = normalizeMonthKey(selectedMonth, activeMonth);
       const [defaultYear, defaultMonth] = selectedMonth.split("-").map(Number);
       const context = { year: defaultYear, month: defaultMonth, date: "", section: "daily" };
       const imported = { expenses: [], fixed: [] };
@@ -1120,11 +1145,15 @@
           return;
         }
         const monthMatch = cleaned.match(/(\d{4})\s*年\s*(\d{1,2})\s*月/);
-        if (monthMatch) {
+        if (monthMatch && isValidMonthNumber(Number(monthMatch[2]))) {
           context.year = Number(monthMatch[1]);
           context.month = Number(monthMatch[2]);
           context.date = "";
           context.section = "daily";
+          return;
+        }
+        if (context.section === "fixed") {
+          parseFixedLine(cleaned, selectedMonth).forEach((item) => imported.fixed.push(item));
           return;
         }
 
@@ -1140,9 +1169,9 @@
         }
 
         const monthDay = cleaned.match(/^(\d{1,2})\s*月\s*(\d{1,2})\s*日?/);
-        if (monthDay) {
+        if (monthDay && isValidDateParts(context.year, Number(monthDay[1]), Number(monthDay[2]))) {
           context.month = Number(monthDay[1]);
-          context.date = `${context.year}-${String(context.month).padStart(2, "0")}-${String(monthDay[2]).padStart(2, "0")}`;
+          context.date = buildDate(context.year, context.month, Number(monthDay[2]));
           context.section = "daily";
           cleaned = cleaned.replace(/^(\d{1,2})\s*月\s*(\d{1,2})\s*日?/, "").trim();
           if (!cleaned) return;
@@ -1163,10 +1192,6 @@
         }
 
         if (isZeroText(cleaned) || cleaned.split(/[：:]/).some((part, index) => index > 0 && isZeroText(part))) return;
-        if (context.section === "fixed") {
-          parseFixedLine(cleaned, selectedMonth).forEach((item) => imported.fixed.push(item));
-          return;
-        }
         if (!context.date) return;
         parseExpenseLine(cleaned, context.date).forEach((item) => imported.expenses.push(item));
       });
@@ -1242,6 +1267,7 @@
     }
 
     function render() {
+      activeMonth = normalizeMonthKey(activeMonth);
       el("monthTitle").textContent = monthText(activeMonth);
       el("monthPicker").value = activeMonth;
 
@@ -1796,7 +1822,7 @@
     });
 
     el("monthPicker").addEventListener("change", (event) => {
-      activeMonth = event.target.value;
+      activeMonth = normalizeMonthKey(event.target.value, activeMonth);
       resetExpenseForm();
       render();
     });
@@ -1871,7 +1897,7 @@
     });
     el("importForm").addEventListener("submit", (event) => {
       event.preventDefault();
-      const targetMonth = el("importMonth").value || activeMonth;
+      const targetMonth = normalizeMonthKey(el("importMonth").value || activeMonth, activeMonth);
       const imported = parseImportText(el("importText").value, targetMonth);
       const importedCount = imported.expenses.length + imported.fixed.length;
       if (!importedCount) {
@@ -1881,7 +1907,7 @@
       data.expenses.push(...imported.expenses);
       data.fixed.push(...imported.fixed);
       data.deletedFixedMonths = (data.deletedFixedMonths || []).filter((month) => month !== targetMonth);
-      activeMonth = imported.expenses[0]?.date.slice(0, 7) || targetMonth;
+      activeMonth = targetMonth;
       saveData();
       render();
       el("importResult").textContent = `已导入日常 ${imported.expenses.length} 笔，固定费用 ${imported.fixed.length} 笔`;
