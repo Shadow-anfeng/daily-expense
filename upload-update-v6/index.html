@@ -1,0 +1,1785 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2f7d68">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="每日花销">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <title>每日花销</title>
+  <style>
+    :root {
+      --bg: #f6f5f1;
+      --panel: #ffffff;
+      --ink: #202124;
+      --muted: #777b83;
+      --line: #e7e3dc;
+      --accent: #2f7d68;
+      --accent-2: #d94f45;
+      --gold: #e0ae38;
+      --blue: #4a72c9;
+      --soft: #eef5f1;
+      --shadow: 0 16px 42px rgba(35, 31, 24, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.8), rgba(246,245,241,.96) 240px),
+        var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      color: inherit;
+      background: transparent;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      padding: 22px 18px 42px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 44px;
+    }
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid transparent;
+      color: #333;
+    }
+
+    .icon-btn:hover { background: #eee9df; }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+    }
+
+    .mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: linear-gradient(135deg, var(--accent), #1f4d64);
+      font-weight: 900;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 18px;
+      align-items: end;
+      padding: 38px 0 18px;
+    }
+
+    .month-title {
+      font-size: clamp(42px, 8vw, 82px);
+      line-height: .95;
+      margin: 0 0 18px;
+      font-weight: 560;
+      letter-spacing: 0;
+    }
+
+    .month-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .month-picker,
+    .primary,
+    .ghost,
+    .mini-btn {
+      min-height: 40px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 0 12px;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    .ghost { color: #2e353a; }
+
+    .summary {
+      display: grid;
+      gap: 10px;
+    }
+
+    .summary-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .summary-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 7px;
+    }
+
+    .summary-value {
+      font-size: 30px;
+      line-height: 1.05;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .delta.up { color: var(--accent-2); }
+    .delta.down { color: var(--accent); }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      padding: 5px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ebe6dc;
+      width: fit-content;
+      margin: 12px 0 20px;
+    }
+
+    .tab {
+      min-width: 88px;
+      min-height: 38px;
+      border-radius: 6px;
+      color: #4d5258;
+      font-weight: 700;
+    }
+
+    .tab.active {
+      background: var(--panel);
+      color: var(--ink);
+      box-shadow: 0 8px 20px rgba(35, 31, 24, .08);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .section {
+      margin-bottom: 18px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 0 12px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.2;
+    }
+
+    .section-title[data-toggle],
+    .day-head[data-toggle] {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .chev {
+      width: 0;
+      height: 0;
+      border-top: 7px solid transparent;
+      border-bottom: 7px solid transparent;
+      border-left: 10px solid #30353a;
+      transform: rotate(90deg);
+      transition: transform .16s ease;
+    }
+
+    .chev.closed {
+      transform: rotate(0deg);
+    }
+
+    .fixed-list,
+    .day-list,
+    .stat-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .fixed-item,
+    .expense-item,
+    .day-card,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .fixed-item,
+    .expense-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+    }
+
+    .item-name {
+      font-weight: 760;
+      overflow-wrap: anywhere;
+    }
+
+    .item-note {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 3px;
+      overflow-wrap: anywhere;
+    }
+
+    .money {
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: #2f5d4f;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .day-card {
+      overflow: hidden;
+      box-shadow: 0 8px 22px rgba(35, 31, 24, .05);
+    }
+
+    .day-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 16px 16px 10px;
+    }
+
+    .day-title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 24px;
+      font-weight: 830;
+    }
+
+    .expense-item {
+      margin: 0 12px 10px;
+      border-color: #eee9df;
+      box-shadow: none;
+    }
+
+    .highlight {
+      display: inline;
+      padding: 2px 5px;
+      background: #fff076;
+      border-radius: 2px;
+    }
+
+    .empty {
+      padding: 28px 18px;
+      color: var(--muted);
+      background: rgba(255,255,255,.6);
+      border: 1px dashed #d6d0c5;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .side {
+      position: sticky;
+      top: 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel {
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h3 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+
+    .form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfaf7;
+      padding: 10px 11px;
+      color: var(--ink);
+      outline: none;
+    }
+
+    .field textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .import-box {
+      min-height: 180px;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .helper {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .import-result {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      min-height: 20px;
+    }
+
+    .insight-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .insight {
+      border-left: 4px solid var(--accent);
+      background: #fbfaf7;
+      border-radius: 8px;
+      padding: 12px 12px 12px 14px;
+      line-height: 1.55;
+    }
+
+    .insight strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .year-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .year-cell {
+      background: #fbfaf7;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .year-cell div:first-child {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .mini-btn {
+      min-width: 34px;
+      padding: 0 10px;
+      color: #4d5258;
+    }
+
+    .danger:hover { color: var(--accent-2); }
+
+    .inline-editor {
+      grid-column: 1 / -1;
+      display: grid;
+      gap: 10px;
+      width: 100%;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+
+    .inline-editor .actions {
+      justify-content: flex-start;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 82px minmax(90px, 1fr) 86px;
+      gap: 10px;
+      align-items: center;
+      margin: 11px 0;
+    }
+
+    .bar-track {
+      height: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #eee9df;
+    }
+
+    .bar {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--gold));
+      width: 0%;
+    }
+
+    .trend {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      align-items: end;
+      gap: 6px;
+      height: 160px;
+      padding-top: 12px;
+    }
+
+    .trend-col {
+      display: grid;
+      align-items: end;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .trend-bar {
+      min-height: 3px;
+      border-radius: 999px 999px 2px 2px;
+      background: var(--blue);
+    }
+
+    .trend-label {
+      color: var(--muted);
+      font-size: 11px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%) translateY(18px);
+      opacity: 0;
+      pointer-events: none;
+      background: #202124;
+      color: white;
+      border-radius: 8px;
+      padding: 10px 14px;
+      transition: .2s ease;
+      z-index: 4;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 860px) {
+      .app { padding: 14px 12px 88px; }
+      .hero,
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .summary-row { grid-template-columns: 1fr 1fr; }
+      .side {
+        position: static;
+      }
+      .tabs {
+        width: 100%;
+      }
+      .tab { flex: 1; }
+      .fixed-item,
+      .expense-item {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+      .year-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .fixed-item .tag,
+      .expense-item .tag {
+        grid-column: 1 / -1;
+        width: fit-content;
+      }
+      .bar-row {
+        grid-template-columns: 74px minmax(70px, 1fr) 76px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topbar">
+      <button class="icon-btn" id="prevMonth" title="上个月" aria-label="上个月">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 19l-7-7 7-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="brand"><span class="mark">¥</span><span>每日花销</span></div>
+      <button class="icon-btn" id="nextMonth" title="下个月" aria-label="下个月">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <section class="hero">
+      <div>
+        <h1 class="month-title" id="monthTitle">2026年5月</h1>
+        <div class="month-tools">
+          <input class="month-picker" id="monthPicker" type="month">
+          <button class="primary" id="quickAdd">记一笔</button>
+          <button class="ghost" id="showImport">批量导入</button>
+          <button class="ghost danger" id="deleteMonthData">删除本月</button>
+          <button class="ghost danger" id="clearAllData">全部归零</button>
+          <button class="ghost" id="exportJson">导出数据</button>
+        </div>
+      </div>
+      <div class="summary">
+        <div class="summary-card">
+          <div class="summary-label">本月支出</div>
+          <div class="summary-value" id="monthTotal">¥0.00</div>
+        </div>
+        <div class="summary-row">
+          <div class="summary-card">
+            <div class="summary-label">上月同期</div>
+            <div class="summary-value" id="lastSame">¥0.00</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">变化</div>
+            <div class="summary-value delta" id="monthDelta">--</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="tabs" aria-label="页面">
+      <button class="tab active" data-tab="detail">明细</button>
+      <button class="tab" data-tab="stats">统计</button>
+      <button class="tab" data-tab="year">年度</button>
+      <button class="tab" data-tab="fixed">固定费用</button>
+    </nav>
+
+    <section class="layout">
+      <div>
+        <div id="detailView">
+          <section class="section">
+            <div class="section-head">
+              <h2 class="section-title" data-toggle="fixed"><span class="chev" data-chev="fixed"></span>固定费用</h2>
+              <strong id="fixedTotal">¥0.00</strong>
+            </div>
+            <div class="fixed-list" id="fixedPreview"></div>
+          </section>
+          <section class="section">
+            <div class="section-head">
+              <h2 class="section-title" data-toggle="daily"><span class="chev" data-chev="daily"></span>每日明细</h2>
+              <strong id="dailyTotal">¥0.00</strong>
+            </div>
+            <div class="day-list" id="dayList"></div>
+          </section>
+        </div>
+
+        <div id="statsView" hidden>
+          <div class="stat-list">
+            <div class="stat-card">
+              <div class="section-head">
+                <h2 class="section-title">分类花销</h2>
+                <strong id="categoryTotal">¥0.00</strong>
+              </div>
+              <div id="categoryBars"></div>
+            </div>
+            <div class="stat-card">
+              <div class="section-head">
+                <h2 class="section-title">每日走势</h2>
+                <strong id="averageDaily">日均 ¥0.00</strong>
+              </div>
+              <div class="trend" id="trendBars"></div>
+            </div>
+            <div class="stat-card">
+              <div class="section-head">
+                <h2 class="section-title">本月记录</h2>
+              </div>
+              <div id="recordSummary"></div>
+            </div>
+            <div class="stat-card">
+              <div class="section-head">
+                <h2 class="section-title">核心结论与建议</h2>
+              </div>
+              <div class="insight-list" id="monthlyAdvice"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="yearView" hidden>
+          <div class="stat-list">
+            <div class="stat-card">
+              <div class="section-head">
+                <h2 class="section-title" id="yearTitle">年度统计</h2>
+                <strong id="yearTotal">¥0.00</strong>
+              </div>
+              <div class="year-grid" id="yearSummary"></div>
+            </div>
+            <div class="stat-card">
+              <div class="section-head">
+                <h2 class="section-title">每月花销</h2>
+                <strong id="yearAverage">月均 ¥0.00</strong>
+              </div>
+              <div id="yearMonthBars"></div>
+            </div>
+            <div class="stat-card">
+              <div class="section-head">
+                <h2 class="section-title">年度分类</h2>
+              </div>
+              <div id="yearCategoryBars"></div>
+            </div>
+            <div class="stat-card">
+              <div class="section-head">
+                <h2 class="section-title">年度建议</h2>
+              </div>
+              <div class="insight-list" id="yearAdvice"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="fixedView" hidden>
+          <section class="section">
+            <div class="section-head">
+              <h2 class="section-title" data-toggle="fixedManage"><span class="chev" data-chev="fixedManage"></span>固定费用</h2>
+              <strong id="fixedManageTotal">¥0.00</strong>
+            </div>
+            <div class="fixed-list" id="fixedManage"></div>
+          </section>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="panel" id="importPanel" hidden>
+          <h3>批量导入</h3>
+          <form class="form" id="importForm">
+            <div class="field">
+              <label for="importMonth">导入月份</label>
+              <input id="importMonth" type="month" required>
+            </div>
+            <div class="field">
+              <label for="importText">粘贴旧记录</label>
+              <textarea class="import-box" id="importText" placeholder="2026年5月
+5月1日
+房租：416元
+早餐：6元
+午餐：15.3元
+晚餐：13.09元
+
+5月2日
+电动车充电：3.78元
+其他消费：买菜13.2元，剪头发25元"></textarea>
+            </div>
+            <div class="helper">也支持表格格式：日期, 名称, 金额, 分类, 备注。没有年份时会按当前选择月份导入。</div>
+            <div class="import-result" id="importResult"></div>
+            <div class="actions">
+              <button class="ghost" type="button" id="clearImport">清空</button>
+              <button class="primary" type="submit">导入</button>
+            </div>
+          </form>
+          <div class="field" style="margin-top:12px">
+            <label for="restoreJson">恢复备份</label>
+            <input id="restoreJson" type="file" accept="application/json,.json">
+          </div>
+          <div class="helper">电脑上点“导出数据”，把 JSON 文件发到手机；手机打开这个页面后，用这里恢复备份。</div>
+        </div>
+
+        <div class="panel">
+          <h3 id="expenseFormTitle">记一笔</h3>
+          <form class="form" id="expenseForm">
+            <input type="hidden" id="expenseId">
+            <div class="two">
+              <div class="field">
+                <label for="expenseDate">日期</label>
+                <input id="expenseDate" type="date" required>
+              </div>
+              <div class="field">
+                <label for="expenseAmount">金额</label>
+                <input id="expenseAmount" type="number" step="0.01" min="0" required placeholder="0.00">
+              </div>
+            </div>
+            <div class="field">
+              <label for="expenseName">名称</label>
+              <input id="expenseName" required placeholder="午餐、房租、买菜">
+            </div>
+            <div class="two">
+              <div class="field">
+                <label for="expenseCategory">分类</label>
+                <select id="expenseCategory"></select>
+              </div>
+              <div class="field">
+                <label for="expenseType">类型</label>
+                <select id="expenseType">
+                  <option value="daily">日常</option>
+                  <option value="fixed">固定</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="expenseNote">备注</label>
+              <textarea id="expenseNote" placeholder="自动续费、和谁一起、在哪里买"></textarea>
+            </div>
+            <div class="actions">
+              <button class="ghost" type="button" id="resetExpense">清空</button>
+              <button class="primary" type="submit">保存</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <h3 id="fixedFormTitle">固定费用</h3>
+          <form class="form" id="fixedForm">
+            <input type="hidden" id="fixedId">
+            <div class="field">
+              <label for="fixedName">名称</label>
+              <input id="fixedName" required placeholder="听书会员">
+            </div>
+            <div class="two">
+              <div class="field">
+                <label for="fixedAmount">金额</label>
+                <input id="fixedAmount" type="number" step="0.01" min="0" required placeholder="0.00">
+              </div>
+              <div class="field">
+                <label for="fixedDay">扣费日</label>
+                <input id="fixedDay" type="number" min="1" max="31" required placeholder="1">
+              </div>
+            </div>
+            <div class="field">
+              <label for="fixedCategory">分类</label>
+              <select id="fixedCategory"></select>
+            </div>
+            <div class="field">
+              <label for="fixedNote">备注</label>
+              <textarea id="fixedNote" placeholder="微信自动续费"></textarea>
+            </div>
+            <div class="actions">
+              <button class="ghost" type="button" id="resetFixed">清空</button>
+              <button class="primary" type="submit">保存</button>
+            </div>
+          </form>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <div class="toast" id="toast">已保存</div>
+
+  <script>
+    const storeKey = "daily-expense-v2";
+    const categories = ["餐饮", "住房", "交通", "生活缴费", "会员订阅", "购物", "医疗", "其他"];
+    const zeroWords = ["无", "自制", "没有", "0", "0元"];
+    const today = new Date();
+    let activeTab = "detail";
+    let activeMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+    let collapsedSections = { fixed: false, daily: false, fixedManage: false };
+    let collapsedDays = new Set();
+
+    const seed = {
+      expenses: [],
+      fixed: [],
+      deletedFixedMonths: []
+    };
+
+    let data = loadData();
+    let editingExpenseId = "";
+
+    const el = (id) => document.getElementById(id);
+    const money = (n) => `¥${Number(n || 0).toFixed(2)}`;
+    const compactMoney = (n) => `¥${Number(n || 0).toLocaleString("zh-CN", { maximumFractionDigits: 2 })}`;
+    const monthText = (ym) => {
+      const [y, m] = ym.split("-");
+      return `${y}年${Number(m)}月`;
+    };
+    const dateDayText = (date) => `${Number(date.slice(5, 7))}月${Number(date.slice(8, 10))}日`;
+
+    function loadData() {
+      const raw = localStorage.getItem(storeKey);
+      if (!raw) {
+        localStorage.setItem(storeKey, JSON.stringify(seed));
+        return structuredClone(seed);
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        return { expenses: parsed.expenses || [], fixed: parsed.fixed || [], deletedFixedMonths: parsed.deletedFixedMonths || [] };
+      } catch {
+        return structuredClone(seed);
+      }
+    }
+
+    function saveData() {
+      data = normalizeData(data);
+      localStorage.setItem(storeKey, JSON.stringify(data));
+    }
+
+    function normalizeData(source) {
+      const normalized = {
+        expenses: Array.isArray(source.expenses) ? [...source.expenses] : [],
+        fixed: Array.isArray(source.fixed) ? [...source.fixed] : [],
+        deletedFixedMonths: Array.isArray(source.deletedFixedMonths) ? [...source.deletedFixedMonths] : []
+      };
+      const rentItems = normalized.expenses.filter((item) => /房租|租金/.test(item.name || ""));
+      if (rentItems.length && !normalized.fixed.some((item) => /房租|租金/.test(item.name || ""))) {
+        const latestRent = [...rentItems].sort((a, b) => String(b.date).localeCompare(String(a.date)))[0];
+        normalized.fixed.unshift({
+          id: crypto.randomUUID(),
+          name: latestRent.name || "房租",
+          amount: Number(latestRent.amount || 0),
+          category: "住房",
+          day: Number(String(latestRent.date || "").slice(8, 10)) || 1,
+          month: String(latestRent.date || activeMonth).slice(0, 7),
+          note: latestRent.note || ""
+        });
+      }
+      normalized.fixed = normalized.fixed
+        .map((item) => ({
+          ...item,
+          day: Number(item.day || 1),
+          amount: Number(item.amount || 0)
+        }))
+        .filter((item) => item.month);
+      normalized.expenses = normalized.expenses.filter((item) => !/房租|租金/.test(item.name || ""));
+      return normalized;
+    }
+
+    saveData();
+
+    function showToast(text) {
+      const toast = el("toast");
+      toast.textContent = text;
+      toast.classList.add("show");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 1600);
+    }
+
+    function monthBounds(ym) {
+      const [year, month] = ym.split("-").map(Number);
+      const start = new Date(year, month - 1, 1);
+      const end = new Date(year, month, 0);
+      return { year, month, start, end, days: end.getDate() };
+    }
+
+    function addMonths(ym, diff) {
+      const [year, month] = ym.split("-").map(Number);
+      const d = new Date(year, month - 1 + diff, 1);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    function monthExpenses(ym) {
+      return data.expenses.filter((item) => item.date.startsWith(ym));
+    }
+
+    function fixedForMonth(ym) {
+      if (data.deletedFixedMonths?.includes(ym)) return [];
+      const { days } = monthBounds(ym);
+      return data.fixed.filter((item) => item.month === ym).map((item) => ({
+        ...item,
+        date: `${ym}-${String(Math.min(Number(item.day), days)).padStart(2, "0")}`,
+        type: "fixed"
+      }));
+    }
+
+    function allMonthItems(ym) {
+      return [...fixedForMonth(ym), ...monthExpenses(ym)];
+    }
+
+    function allYearItems(year) {
+      return Array.from({ length: 12 }, (_, index) => `${year}-${String(index + 1).padStart(2, "0")}`)
+        .flatMap((ym) => allMonthItems(ym));
+    }
+
+    function groupBy(list, getKey) {
+      const grouped = new Map();
+      list.forEach((item) => {
+        const key = getKey(item);
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key).push(item);
+      });
+      return grouped;
+    }
+
+    function sum(items) {
+      return items.reduce((total, item) => total + Number(item.amount || 0), 0);
+    }
+
+    function samePeriodTotal(ym) {
+      const { year, month, days } = monthBounds(ym);
+      const nowIsSelectedMonth = today.getFullYear() === year && today.getMonth() + 1 === month;
+      const untilDay = nowIsSelectedMonth ? today.getDate() : days;
+      const previous = addMonths(ym, -1);
+      const previousDays = monthBounds(previous).days;
+      const limit = Math.min(untilDay, previousDays);
+      return sum(allMonthItems(previous).filter((item) => Number(item.date.slice(8, 10) || item.day || 1) <= limit));
+    }
+
+    function fillSelect(select) {
+      select.innerHTML = categories.map((name) => `<option value="${name}">${name}</option>`).join("");
+    }
+
+    function inferCategory(name, fallback = "其他") {
+      const text = String(name || "");
+      if (/早|午|晚|餐|饭|菜|水果|饮料|咖啡|奶茶|面|粉|包子/.test(text)) return "餐饮";
+      if (/房租|租金|物业|住宿/.test(text)) return "住房";
+      if (/公交|地铁|打车|滴滴|车费|火车|高铁|机票|交通/.test(text)) return "交通";
+      if (/电动车|充电|流量|话费|水费|电费|燃气|宽带|wifi|WiFi|路由器/.test(text)) return "生活缴费";
+      if (/会员|订阅|续费/.test(text)) return "会员订阅";
+      if (/药|医院|门诊|挂号|医疗/.test(text)) return "医疗";
+      if (/买|购物|衣服|鞋|淘宝|京东|拼多多/.test(text)) return "购物";
+      return categories.includes(fallback) ? fallback : "其他";
+    }
+
+    function dailySortIndex(item) {
+      const text = `${item.name || ""} ${item.category || ""}`;
+      if (/早餐|早饭|早/.test(text)) return 10;
+      if (/午餐|午饭|中餐|中饭|午/.test(text)) return 20;
+      if (/晚餐|晚饭|晚/.test(text)) return 30;
+      if (/电动车|充电|车.*电|电费/.test(text)) return 40;
+      if (/其他消费|其他|杂项/.test(text)) return 90;
+      return 70;
+    }
+
+    function sortDailyItems(items) {
+      return [...items].sort((a, b) =>
+        dailySortIndex(a) - dailySortIndex(b) ||
+        String(a.name || "").localeCompare(String(b.name || ""), "zh-CN") ||
+        Number(a.amount || 0) - Number(b.amount || 0)
+      );
+    }
+
+    function normalizeDate(input, context) {
+      const text = String(input || "").trim();
+      let match = text.match(/(\d{4})[-/.年](\d{1,2})[-/.月](\d{1,2})/);
+      if (match) return `${match[1]}-${String(match[2]).padStart(2, "0")}-${String(match[3]).padStart(2, "0")}`;
+      match = text.match(/(\d{1,2})[-/.月](\d{1,2})/);
+      if (match) return `${context.year}-${String(match[1]).padStart(2, "0")}-${String(match[2]).padStart(2, "0")}`;
+      return "";
+    }
+
+    function parseImportText(text, selectedMonth = activeMonth) {
+      const [defaultYear, defaultMonth] = selectedMonth.split("-").map(Number);
+      const context = { year: defaultYear, month: defaultMonth, date: "", section: "daily" };
+      const imported = { expenses: [], fixed: [] };
+      const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+
+      lines.forEach((line) => {
+        let cleaned = line.replace(/^[\s\-*•、]+/, "").trim();
+        if (/固定费用|固定支出|每月固定/.test(cleaned)) {
+          context.section = "fixed";
+          const rest = cleaned.replace(/^[▶▼▾\s-]*固定(费用|支出)?[：:]?/, "").trim();
+          if (rest) parseFixedLine(rest, selectedMonth).forEach((item) => imported.fixed.push(item));
+          return;
+        }
+        if (/每日明细|日常花销|日常支出/.test(cleaned)) {
+          context.section = "daily";
+          return;
+        }
+        const monthMatch = cleaned.match(/(\d{4})\s*年\s*(\d{1,2})\s*月/);
+        if (monthMatch) {
+          context.year = Number(monthMatch[1]);
+          context.month = Number(monthMatch[2]);
+          context.date = "";
+          context.section = "daily";
+          return;
+        }
+
+        const fullDate = normalizeDate(cleaned, context);
+        if (fullDate) {
+          context.date = fullDate;
+          context.section = "daily";
+          cleaned = cleaned
+            .replace(/^\d{4}[-/.年]\d{1,2}[-/.月]\d{1,2}日?/, "")
+            .replace(/^\d{1,2}[-/.月]\d{1,2}日?/, "")
+            .trim();
+          if (!cleaned) return;
+        }
+
+        const monthDay = cleaned.match(/^(\d{1,2})\s*月\s*(\d{1,2})\s*日?/);
+        if (monthDay) {
+          context.month = Number(monthDay[1]);
+          context.date = `${context.year}-${String(context.month).padStart(2, "0")}-${String(monthDay[2]).padStart(2, "0")}`;
+          context.section = "daily";
+          cleaned = cleaned.replace(/^(\d{1,2})\s*月\s*(\d{1,2})\s*日?/, "").trim();
+          if (!cleaned) return;
+        }
+
+        const csv = cleaned.split(/[\t,，]/).map((part) => part.trim()).filter(Boolean);
+        if (csv.length >= 3 && normalizeDate(csv[0], context) && Number.isFinite(Number(csv[2]))) {
+          imported.expenses.push({
+            id: crypto.randomUUID(),
+            date: normalizeDate(csv[0], context),
+            name: csv[1],
+            amount: Number(csv[2]),
+            category: categories.includes(csv[3]) ? csv[3] : inferCategory(csv[1], csv[3]),
+            type: "daily",
+            note: csv.slice(4).join("，")
+          });
+          return;
+        }
+
+        if (zeroWords.some((word) => cleaned === word || cleaned.endsWith(`：${word}`) || cleaned.endsWith(`:${word}`))) return;
+        if (context.section === "fixed") {
+          parseFixedLine(cleaned, selectedMonth).forEach((item) => imported.fixed.push(item));
+          return;
+        }
+        if (!context.date) return;
+        parseExpenseLine(cleaned, context.date).forEach((item) => imported.expenses.push(item));
+      });
+
+      return imported;
+    }
+
+    function parseFixedLine(line, month = activeMonth) {
+      const results = [];
+      const cleaned = line.replace(/[（）()]/g, " ").replace(/自动续费/g, " 自动续费 ");
+      const parts = cleaned.split(/[，,、；;]/).map((part) => part.trim()).filter(Boolean);
+      parts.forEach((part) => {
+        const match = part.match(/^(.+?)[：:\s]*(\d+(?:\.\d+)?)\s*元?/);
+        if (!match) return;
+        const name = match[1].replace(/手机流量费|固定费用|固定支出/g, "").trim();
+        const amount = Number(match[2]);
+        if (!name || !Number.isFinite(amount) || amount <= 0) return;
+        const dayMatch = part.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*日|每月\s*(\d{1,2})\s*日|(\d{1,2})\s*日/);
+        results.push({
+          id: crypto.randomUUID(),
+          name,
+          amount,
+          category: inferCategory(name),
+          day: Number(dayMatch?.[2] || dayMatch?.[3] || dayMatch?.[4] || 1),
+          month,
+          note: /自动续费|续费/.test(part) ? "自动续费" : ""
+        });
+      });
+      return results;
+    }
+
+    function parseExpenseLine(line, date) {
+      const results = [];
+      const colon = line.match(/^(.+?)[：:]\s*(.+)$/);
+      const label = colon ? colon[1].trim() : "";
+      const body = colon ? colon[2].trim() : line;
+      if (zeroWords.includes(body)) return results;
+      const amountOnly = body.match(/^(\d+(?:\.\d+)?)\s*元?$/);
+      if (label && amountOnly) {
+        results.push({
+          id: crypto.randomUUID(),
+          date,
+          name: label,
+          amount: Number(amountOnly[1]),
+          category: inferCategory(label),
+          type: "daily",
+          note: ""
+        });
+        return results;
+      }
+
+      const parts = body.split(/[，,、；;]/).map((part) => part.trim()).filter(Boolean);
+      parts.forEach((part) => {
+        if (zeroWords.includes(part)) return;
+        const match = part.match(/^(.+?)[\s：:]*(\d+(?:\.\d+)?)\s*元?$/) || part.match(/^(.+?)(\d+(?:\.\d+)?)\s*元?/);
+        if (!match) return;
+        let name = match[1].replace(/[：:]/g, "").trim();
+        if (!name && label) name = label;
+        if (label && parts.length === 1 && !/消费|其他|杂项/.test(label)) name = label;
+        const amount = Number(match[2]);
+        if (!name || !Number.isFinite(amount) || amount <= 0) return;
+        results.push({
+          id: crypto.randomUUID(),
+          date,
+          name,
+          amount,
+          category: inferCategory(name, inferCategory(label)),
+          type: "daily",
+          note: label && /消费|其他|杂项/.test(label) ? label : ""
+        });
+      });
+      return results;
+    }
+
+    function render() {
+      el("monthTitle").textContent = monthText(activeMonth);
+      el("monthPicker").value = activeMonth;
+
+      const fixedItems = fixedForMonth(activeMonth);
+      const dailyItems = monthExpenses(activeMonth);
+      const allItems = [...fixedItems, ...dailyItems];
+      const fixedTotal = sum(fixedItems);
+      const dailyTotal = sum(dailyItems);
+      const total = fixedTotal + dailyTotal;
+      const previousTotal = samePeriodTotal(activeMonth);
+      const delta = total - previousTotal;
+
+      el("monthTotal").textContent = compactMoney(total);
+      el("lastSame").textContent = compactMoney(previousTotal);
+      const deltaEl = el("monthDelta");
+      deltaEl.textContent = previousTotal ? `${delta >= 0 ? "+" : ""}${compactMoney(delta).replace("¥", "¥")}` : "--";
+      deltaEl.className = `summary-value delta ${delta > 0 ? "up" : delta < 0 ? "down" : ""}`;
+      el("fixedTotal").textContent = compactMoney(fixedTotal);
+      el("dailyTotal").textContent = compactMoney(dailyTotal);
+      el("fixedManageTotal").textContent = compactMoney(fixedTotal);
+      el("categoryTotal").textContent = compactMoney(total);
+
+      renderFixedPreview(fixedItems);
+      renderDays(dailyItems);
+      renderFixedManage();
+      renderStats(allItems);
+      renderAnnual();
+      renderTab();
+      renderCollapseState();
+    }
+
+    function renderFixedPreview(items) {
+      if (collapsedSections.fixed) {
+        el("fixedPreview").innerHTML = "";
+        return;
+      }
+      el("fixedPreview").innerHTML = items.length ? items.map((item) => `
+        <article class="fixed-item">
+          <div>
+            <div class="item-name">${escapeHtml(item.name)}</div>
+            ${item.note ? `<div class="item-note">${escapeHtml(item.note)}</div>` : ""}
+          </div>
+          <span class="money">${compactMoney(item.amount)}</span>
+          <span class="tag">每月${item.day}日</span>
+        </article>
+      `).join("") : `<div class="empty">暂无固定费用</div>`;
+    }
+
+    function renderDays(items) {
+      if (collapsedSections.daily) {
+        el("dayList").innerHTML = "";
+        return;
+      }
+      const grouped = groupBy(items.sort((a, b) => a.date.localeCompare(b.date)), (item) => item.date);
+      const html = [...grouped.entries()].map(([date, list]) => {
+        const dayTotal = sum(list);
+        const isClosed = collapsedDays.has(date);
+        return `
+          <article class="day-card">
+            <div class="day-head" data-toggle-day="${date}">
+              <div class="day-title"><span class="chev ${isClosed ? "closed" : ""}"></span>${dateDayText(date)}</div>
+              <strong>${compactMoney(dayTotal)}</strong>
+            </div>
+            ${isClosed ? "" : sortDailyItems(list).map((item) => expenseRow(item)).join("")}
+          </article>
+        `;
+      }).join("");
+      el("dayList").innerHTML = html || `<div class="empty">这个月还没有日常花销</div>`;
+    }
+
+    function expenseRow(item) {
+      const isRent = item.name.includes("房租");
+      const isEditing = editingExpenseId === item.id;
+      return `
+        <article class="expense-item">
+          <div>
+            <div class="item-name ${isRent ? "highlight" : ""}">${escapeHtml(item.name)}</div>
+            ${item.note ? `<div class="item-note">${escapeHtml(item.note)}</div>` : ""}
+          </div>
+          <span class="money">${compactMoney(item.amount)}</span>
+          <span class="tag">${escapeHtml(item.category)}</span>
+          <div class="actions">
+            <button class="mini-btn" title="编辑" aria-label="编辑" data-edit-expense="${item.id}">✎</button>
+            <button class="mini-btn danger" title="删除" aria-label="删除" data-delete-expense="${item.id}">×</button>
+          </div>
+          ${isEditing ? inlineExpenseEditor(item) : ""}
+        </article>
+      `;
+    }
+
+    function inlineExpenseEditor(item) {
+      return `
+        <form class="inline-editor" data-inline-expense-form="${item.id}">
+          <div class="two">
+            <div class="field">
+              <label>名称</label>
+              <input name="name" required value="${escapeHtml(item.name)}">
+            </div>
+            <div class="field">
+              <label>金额</label>
+              <input name="amount" type="number" step="0.01" min="0" required value="${Number(item.amount || 0)}">
+            </div>
+          </div>
+          <div class="two">
+            <div class="field">
+              <label>日期</label>
+              <input name="date" type="date" required value="${item.date}">
+            </div>
+            <div class="field">
+              <label>分类</label>
+              <select name="category">${categories.map((name) => `<option value="${name}" ${name === item.category ? "selected" : ""}>${name}</option>`).join("")}</select>
+            </div>
+          </div>
+          <div class="field">
+            <label>备注</label>
+            <input name="note" value="${escapeHtml(item.note || "")}">
+          </div>
+          <div class="actions">
+            <button class="primary" type="submit">保存</button>
+            <button class="ghost" type="button" data-cancel-inline-edit="true">取消</button>
+          </div>
+        </form>
+      `;
+    }
+
+    function renderFixedManage() {
+      if (collapsedSections.fixedManage) {
+        el("fixedManage").innerHTML = "";
+        return;
+      }
+      const items = fixedForMonth(activeMonth);
+      el("fixedManage").innerHTML = items.length ? items.map((item) => `
+        <article class="fixed-item">
+          <div>
+            <div class="item-name">${escapeHtml(item.name)}</div>
+            ${item.note ? `<div class="item-note">${escapeHtml(item.note)}</div>` : ""}
+          </div>
+          <span class="money">${compactMoney(item.amount)}</span>
+          <span class="tag">${Number(item.month.slice(5, 7))}月${item.day}日</span>
+          <div class="actions">
+            <button class="mini-btn" title="编辑" aria-label="编辑" data-edit-fixed="${item.id}">✎</button>
+            <button class="mini-btn danger" title="删除" aria-label="删除" data-delete-fixed="${item.id}">×</button>
+          </div>
+        </article>
+      `).join("") : `<div class="empty">这个月暂无固定费用</div>`;
+    }
+
+    function renderStats(items) {
+      const byCategory = new Map();
+      items.forEach((item) => byCategory.set(item.category, (byCategory.get(item.category) || 0) + Number(item.amount || 0)));
+      const categoryRows = [...byCategory.entries()].sort((a, b) => b[1] - a[1]);
+      const maxCategory = Math.max(...categoryRows.map((row) => row[1]), 1);
+      el("categoryBars").innerHTML = categoryRows.length ? categoryRows.map(([name, value]) => `
+        <div class="bar-row">
+          <strong>${escapeHtml(name)}</strong>
+          <div class="bar-track"><div class="bar" style="width:${Math.max(4, value / maxCategory * 100)}%"></div></div>
+          <span class="money">${compactMoney(value)}</span>
+        </div>
+      `).join("") : `<div class="empty">暂无统计数据</div>`;
+
+      const { days } = monthBounds(activeMonth);
+      const dayTotals = Array.from({ length: days }, (_, index) => {
+        const day = String(index + 1).padStart(2, "0");
+        return sum(items.filter((item) => (item.date || `${activeMonth}-${String(item.day).padStart(2, "0")}`).endsWith(`-${day}`)));
+      });
+      const visible = dayTotals.map((value, index) => ({ value, day: index + 1 })).filter((item) => item.value > 0);
+      const sampled = visible.length > 12 ? visible.filter((_, index) => index % Math.ceil(visible.length / 12) === 0).slice(0, 12) : visible;
+      const maxDay = Math.max(...sampled.map((item) => item.value), 1);
+      el("trendBars").innerHTML = sampled.length ? sampled.map((item) => `
+        <div class="trend-col" title="${item.day}日 ${money(item.value)}">
+          <div class="trend-bar" style="height:${Math.max(4, item.value / maxDay * 138)}px"></div>
+          <div class="trend-label">${item.day}</div>
+        </div>
+      `).join("") : `<div class="empty">暂无走势</div>`;
+      el("averageDaily").textContent = `日均 ${money(sum(items) / days)}`;
+
+      const biggest = [...items].sort((a, b) => Number(b.amount) - Number(a.amount))[0];
+      el("recordSummary").innerHTML = `
+        <div class="bar-row"><strong>笔数</strong><div></div><span class="money">${items.length}</span></div>
+        <div class="bar-row"><strong>最大</strong><div>${biggest ? escapeHtml(biggest.name) : "--"}</div><span class="money">${biggest ? compactMoney(biggest.amount) : "--"}</span></div>
+        <div class="bar-row"><strong>固定</strong><div></div><span class="money">${compactMoney(sum(fixedForMonth(activeMonth)))}</span></div>
+      `;
+      renderMonthlyAdvice(items, categoryRows, biggest);
+    }
+
+    function renderMonthlyAdvice(items, categoryRows, biggest) {
+      const total = sum(items);
+      if (!items.length) {
+        el("monthlyAdvice").innerHTML = `<div class="empty">这个月还没有足够数据生成建议</div>`;
+        return;
+      }
+      const previousTotal = samePeriodTotal(activeMonth);
+      const fixedTotal = sum(fixedForMonth(activeMonth));
+      const topCategory = categoryRows[0];
+      const advices = [];
+
+      if (previousTotal) {
+        const diff = total - previousTotal;
+        const pct = Math.abs(diff / previousTotal * 100);
+        advices.push({
+          title: diff > 0 ? "本月花销高于上月同期" : diff < 0 ? "本月花销低于上月同期" : "本月与上月同期基本持平",
+          body: diff === 0
+            ? "整体节奏比较稳定，可以继续保持现在的记录习惯。"
+            : `${diff > 0 ? "多花" : "少花"} ${compactMoney(Math.abs(diff))}，变化约 ${pct.toFixed(1)}%。建议重点回看本月新增的大额支出。`
+        });
+      }
+
+      if (topCategory) {
+        advices.push({
+          title: `主要支出集中在${topCategory[0]}`,
+          body: `${topCategory[0]}占本月 ${((topCategory[1] / total) * 100).toFixed(1)}%。如果想控支，先从这个分类找 1 到 2 个可调整项最有效。`
+        });
+      }
+
+      if (fixedTotal / total > 0.45) {
+        advices.push({
+          title: "固定费用占比较高",
+          body: `固定费用约占 ${((fixedTotal / total) * 100).toFixed(1)}%。可以检查会员、流量卡、路由器等自动续费是否仍然需要。`
+        });
+      }
+
+      if (biggest) {
+        advices.push({
+          title: "最大单笔需要单独关注",
+          body: `${biggest.name} 是本月最大单笔，金额 ${compactMoney(biggest.amount)}。如果这是偶发支出，可以备注原因，避免误判为日常消费变高。`
+        });
+      }
+
+      el("monthlyAdvice").innerHTML = advices.slice(0, 4).map((item) => `
+        <div class="insight">
+          <strong>${escapeHtml(item.title)}</strong>
+          <span>${escapeHtml(item.body)}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderAnnual() {
+      const year = Number(activeMonth.slice(0, 4));
+      const months = Array.from({ length: 12 }, (_, index) => {
+        const ym = `${year}-${String(index + 1).padStart(2, "0")}`;
+        const items = allMonthItems(ym);
+        return { ym, month: index + 1, total: sum(items), items };
+      });
+      const yearItems = months.flatMap((month) => month.items);
+      const yearTotal = sum(yearItems);
+      const activeMonths = months.filter((month) => month.total > 0);
+      const biggestMonth = [...months].sort((a, b) => b.total - a.total)[0];
+      const fixedYear = sum(Array.from({ length: 12 }, (_, index) => fixedForMonth(`${year}-${String(index + 1).padStart(2, "0")}`)).flat());
+
+      el("yearTitle").textContent = `${year}年统计`;
+      el("yearTotal").textContent = compactMoney(yearTotal);
+      el("yearAverage").textContent = `月均 ${compactMoney(yearTotal / 12)}`;
+      el("yearSummary").innerHTML = `
+        <div class="year-cell"><div>全年支出</div><strong>${compactMoney(yearTotal)}</strong></div>
+        <div class="year-cell"><div>月均支出</div><strong>${compactMoney(yearTotal / 12)}</strong></div>
+        <div class="year-cell"><div>最高月份</div><strong>${biggestMonth && biggestMonth.total ? `${biggestMonth.month}月 ${compactMoney(biggestMonth.total)}` : "--"}</strong></div>
+        <div class="year-cell"><div>已记录月份</div><strong>${activeMonths.length}个月</strong></div>
+        <div class="year-cell"><div>固定费用</div><strong>${compactMoney(fixedYear)}</strong></div>
+        <div class="year-cell"><div>记录笔数</div><strong>${yearItems.length}笔</strong></div>
+      `;
+
+      const maxMonth = Math.max(...months.map((month) => month.total), 1);
+      el("yearMonthBars").innerHTML = months.map((month) => `
+        <div class="bar-row">
+          <strong>${month.month}月</strong>
+          <div class="bar-track"><div class="bar" style="width:${month.total ? Math.max(4, month.total / maxMonth * 100) : 0}%"></div></div>
+          <span class="money">${compactMoney(month.total)}</span>
+        </div>
+      `).join("");
+
+      const byCategory = new Map();
+      yearItems.forEach((item) => byCategory.set(item.category, (byCategory.get(item.category) || 0) + Number(item.amount || 0)));
+      const categoryRows = [...byCategory.entries()].sort((a, b) => b[1] - a[1]);
+      const maxCategory = Math.max(...categoryRows.map((row) => row[1]), 1);
+      el("yearCategoryBars").innerHTML = categoryRows.length ? categoryRows.map(([name, value]) => `
+        <div class="bar-row">
+          <strong>${escapeHtml(name)}</strong>
+          <div class="bar-track"><div class="bar" style="width:${Math.max(4, value / maxCategory * 100)}%"></div></div>
+          <span class="money">${compactMoney(value)}</span>
+        </div>
+      `).join("") : `<div class="empty">暂无年度数据</div>`;
+
+      renderYearAdvice(yearTotal, months, categoryRows, fixedYear);
+    }
+
+    function renderYearAdvice(yearTotal, months, categoryRows, fixedYear) {
+      if (!yearTotal) {
+        el("yearAdvice").innerHTML = `<div class="empty">导入或记录几个月后，这里会生成年度建议</div>`;
+        return;
+      }
+      const biggestMonth = [...months].sort((a, b) => b.total - a.total)[0];
+      const topCategory = categoryRows[0];
+      const advices = [
+        {
+          title: "年度现金流概览",
+          body: `全年已统计 ${compactMoney(yearTotal)}，平均每月 ${compactMoney(yearTotal / 12)}。后续可以把这个月均值作为预算基线。`
+        }
+      ];
+      if (biggestMonth && biggestMonth.total) {
+        advices.push({
+          title: `${biggestMonth.month}月是支出高峰`,
+          body: `该月支出 ${compactMoney(biggestMonth.total)}。建议回看是否有房租、一次性购物、医疗或出行等特殊项目。`
+        });
+      }
+      if (topCategory) {
+        advices.push({
+          title: `全年最大分类是${topCategory[0]}`,
+          body: `累计 ${compactMoney(topCategory[1])}，占全年 ${((topCategory[1] / yearTotal) * 100).toFixed(1)}%。年度控费优先看这个分类。`
+        });
+      }
+      if (fixedYear / yearTotal > 0.35) {
+        advices.push({
+          title: "固定费用影响全年基线",
+          body: `固定费用全年约 ${compactMoney(fixedYear)}。如果想降低每月最低开销，清理自动续费比压缩日常小额消费更直接。`
+        });
+      }
+      el("yearAdvice").innerHTML = advices.map((item) => `
+        <div class="insight">
+          <strong>${escapeHtml(item.title)}</strong>
+          <span>${escapeHtml(item.body)}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderTab() {
+      document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === activeTab));
+      el("detailView").hidden = activeTab !== "detail";
+      el("statsView").hidden = activeTab !== "stats";
+      el("yearView").hidden = activeTab !== "year";
+      el("fixedView").hidden = activeTab !== "fixed";
+    }
+
+    function renderCollapseState() {
+      document.querySelectorAll("[data-chev]").forEach((chev) => {
+        chev.classList.toggle("closed", Boolean(collapsedSections[chev.dataset.chev]));
+      });
+    }
+
+    function escapeHtml(text) {
+      return String(text || "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function resetExpenseForm() {
+      el("expenseFormTitle").textContent = "记一笔";
+      el("expenseId").value = "";
+      el("expenseDate").value = `${activeMonth}-${String(Math.min(today.getDate(), monthBounds(activeMonth).days)).padStart(2, "0")}`;
+      el("expenseAmount").value = "";
+      el("expenseName").value = "";
+      el("expenseCategory").value = "餐饮";
+      el("expenseType").value = "daily";
+      el("expenseNote").value = "";
+    }
+
+    function resetFixedForm() {
+      el("fixedFormTitle").textContent = "固定费用";
+      el("fixedId").value = "";
+      el("fixedName").value = "";
+      el("fixedAmount").value = "";
+      el("fixedDay").value = "1";
+      el("fixedCategory").value = "生活缴费";
+      el("fixedNote").value = "";
+    }
+
+    function upsertExpense(event) {
+      event.preventDefault();
+      const id = el("expenseId").value || crypto.randomUUID();
+      const item = {
+        id,
+        date: el("expenseDate").value,
+        name: el("expenseName").value.trim(),
+        amount: Number(el("expenseAmount").value),
+        category: el("expenseCategory").value,
+        type: el("expenseType").value,
+        note: el("expenseNote").value.trim()
+      };
+      if (item.type === "fixed") {
+        data.fixed.push({ id: crypto.randomUUID(), name: item.name, amount: item.amount, category: item.category, day: Number(item.date.slice(8, 10)), note: item.note });
+      } else {
+        const index = data.expenses.findIndex((expense) => expense.id === id);
+        if (index >= 0) data.expenses[index] = item;
+        else data.expenses.push(item);
+      }
+      saveData();
+      resetExpenseForm();
+      render();
+      showToast("已保存");
+    }
+
+    function upsertFixed(event) {
+      event.preventDefault();
+      const id = el("fixedId").value || crypto.randomUUID();
+      const item = {
+        id,
+        name: el("fixedName").value.trim(),
+        amount: Number(el("fixedAmount").value),
+        category: el("fixedCategory").value,
+        day: Number(el("fixedDay").value),
+        month: activeMonth,
+        note: el("fixedNote").value.trim()
+      };
+      const index = data.fixed.findIndex((fixed) => fixed.id === id);
+      if (index >= 0) data.fixed[index] = item;
+      else data.fixed.push(item);
+      saveData();
+      resetFixedForm();
+      render();
+      showToast("已保存");
+    }
+
+    document.addEventListener("click", (event) => {
+      const sectionToggle = event.target.closest("[data-toggle]");
+      if (sectionToggle) {
+        const key = sectionToggle.dataset.toggle;
+        collapsedSections[key] = !collapsedSections[key];
+        render();
+        return;
+      }
+      const dayToggle = event.target.closest("[data-toggle-day]");
+      if (dayToggle) {
+        const key = dayToggle.dataset.toggleDay;
+        if (collapsedDays.has(key)) collapsedDays.delete(key);
+        else collapsedDays.add(key);
+        render();
+        return;
+      }
+      const target = event.target.closest("button");
+      if (!target) return;
+      if (target.dataset.tab) {
+        activeTab = target.dataset.tab;
+        renderTab();
+      }
+      if (target.dataset.editExpense) {
+        editingExpenseId = editingExpenseId === target.dataset.editExpense ? "" : target.dataset.editExpense;
+        render();
+      }
+      if (target.dataset.cancelInlineEdit) {
+        editingExpenseId = "";
+        render();
+      }
+      if (target.dataset.deleteExpense) {
+        data.expenses = data.expenses.filter((expense) => expense.id !== target.dataset.deleteExpense);
+        if (editingExpenseId === target.dataset.deleteExpense) editingExpenseId = "";
+        saveData();
+        render();
+        showToast("已删除");
+      }
+      if (target.dataset.editFixed) {
+        const item = data.fixed.find((fixed) => fixed.id === target.dataset.editFixed);
+        if (!item) return;
+        el("fixedFormTitle").textContent = "编辑固定费用";
+        el("fixedId").value = item.id;
+        el("fixedName").value = item.name;
+        el("fixedAmount").value = item.amount;
+        el("fixedDay").value = item.day;
+        el("fixedCategory").value = item.category;
+        el("fixedNote").value = item.note || "";
+      }
+      if (target.dataset.deleteFixed) {
+        data.fixed = data.fixed.filter((fixed) => fixed.id !== target.dataset.deleteFixed);
+        saveData();
+        render();
+        showToast("已删除");
+      }
+    });
+
+    document.addEventListener("submit", (event) => {
+      const form = event.target.closest("[data-inline-expense-form]");
+      if (!form) return;
+      event.preventDefault();
+      const id = form.dataset.inlineExpenseForm;
+      const item = data.expenses.find((expense) => expense.id === id);
+      if (!item) return;
+      const formData = new FormData(form);
+      item.name = String(formData.get("name") || "").trim();
+      item.amount = Number(formData.get("amount") || 0);
+      item.date = String(formData.get("date") || item.date);
+      item.category = String(formData.get("category") || item.category);
+      item.note = String(formData.get("note") || "").trim();
+      editingExpenseId = "";
+      saveData();
+      render();
+      showToast("已修改");
+    });
+
+    el("monthPicker").addEventListener("change", (event) => {
+      activeMonth = event.target.value;
+      resetExpenseForm();
+      render();
+    });
+    el("prevMonth").addEventListener("click", () => {
+      activeMonth = addMonths(activeMonth, -1);
+      resetExpenseForm();
+      render();
+    });
+    el("nextMonth").addEventListener("click", () => {
+      activeMonth = addMonths(activeMonth, 1);
+      resetExpenseForm();
+      render();
+    });
+    el("quickAdd").addEventListener("click", () => {
+      activeTab = "detail";
+      renderTab();
+      el("expenseName").focus();
+    });
+    el("showImport").addEventListener("click", () => {
+      const panel = el("importPanel");
+      panel.hidden = !panel.hidden;
+      if (!panel.hidden) {
+        el("importMonth").value = activeMonth;
+        el("importText").focus();
+      }
+    });
+    el("clearImport").addEventListener("click", () => {
+      el("importText").value = "";
+      el("importResult").textContent = "";
+    });
+    el("deleteMonthData").addEventListener("click", () => {
+      data.expenses = data.expenses.filter((expense) => !String(expense.date || "").startsWith(activeMonth));
+      data.deletedFixedMonths = [...new Set([...(data.deletedFixedMonths || []), activeMonth])];
+      editingExpenseId = "";
+      saveData();
+      render();
+      showToast(`${monthText(activeMonth)}已归零`);
+    });
+    el("clearAllData").addEventListener("click", () => {
+      data = structuredClone(seed);
+      editingExpenseId = "";
+      collapsedDays = new Set();
+      saveData();
+      render();
+      showToast("全部数据已归零");
+    });
+    el("importForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const targetMonth = el("importMonth").value || activeMonth;
+      const imported = parseImportText(el("importText").value, targetMonth);
+      const importedCount = imported.expenses.length + imported.fixed.length;
+      if (!importedCount) {
+        el("importResult").textContent = "没有识别到可导入的花销";
+        return;
+      }
+      data.expenses.push(...imported.expenses);
+      data.fixed.push(...imported.fixed);
+      data.deletedFixedMonths = (data.deletedFixedMonths || []).filter((month) => month !== targetMonth);
+      activeMonth = imported.expenses[0]?.date.slice(0, 7) || targetMonth;
+      saveData();
+      render();
+      el("importResult").textContent = `已导入日常 ${imported.expenses.length} 笔，固定费用 ${imported.fixed.length} 笔`;
+      showToast(`已导入 ${importedCount} 笔`);
+    });
+    el("restoreJson").addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const restored = JSON.parse(await file.text());
+        if (!Array.isArray(restored.expenses) || !Array.isArray(restored.fixed)) {
+          throw new Error("bad backup");
+        }
+        data = { expenses: restored.expenses, fixed: restored.fixed, deletedFixedMonths: restored.deletedFixedMonths || [] };
+        saveData();
+        const firstExpense = data.expenses[0];
+        if (firstExpense && firstExpense.date) activeMonth = firstExpense.date.slice(0, 7);
+        render();
+        el("importResult").textContent = "备份已恢复";
+        showToast("备份已恢复");
+      } catch {
+        el("importResult").textContent = "备份文件无法识别";
+      } finally {
+        event.target.value = "";
+      }
+    });
+    el("exportJson").addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `每日花销-${activeMonth}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+    el("expenseForm").addEventListener("submit", upsertExpense);
+    el("fixedForm").addEventListener("submit", upsertFixed);
+    el("resetExpense").addEventListener("click", resetExpenseForm);
+    el("resetFixed").addEventListener("click", resetFixedForm);
+
+    fillSelect(el("expenseCategory"));
+    fillSelect(el("fixedCategory"));
+    if (activeMonth !== "2026-05") activeMonth = "2026-05";
+    resetExpenseForm();
+    resetFixedForm();
+    render();
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
