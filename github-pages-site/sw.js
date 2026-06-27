@@ -1,4 +1,4 @@
-const CACHE_NAME = "daily-expense-v11";
+﻿const CACHE_NAME = "daily-expense-v18";
 const ASSETS = [
   "./",
   "./index.html",
@@ -34,3 +34,5 @@ self.addEventListener("fetch", (event) => {
     )
   );
 });
+
+

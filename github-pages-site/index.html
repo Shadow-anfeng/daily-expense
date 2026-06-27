@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#2f7d68">
+  <meta name="theme-color" content="#85694e">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="每日花销">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -11,17 +11,17 @@
   <title>每日花销</title>
   <style>
     :root {
-      --bg: #f6f5f1;
-      --panel: #ffffff;
-      --ink: #202124;
-      --muted: #777b83;
-      --line: #e7e3dc;
-      --accent: #2f7d68;
-      --accent-2: #d94f45;
-      --gold: #e0ae38;
-      --blue: #4a72c9;
-      --soft: #eef5f1;
-      --shadow: 0 16px 42px rgba(35, 31, 24, .08);
+      --bg: #e8ddcc;
+      --panel: #fbf6ec;
+      --ink: #383a2c;
+      --muted: #85694e;
+      --line: #d7c8b4;
+      --accent: #85694e;
+      --accent-2: #a65f4b;
+      --gold: #b79a66;
+      --blue: #6f7b61;
+      --soft: #eee6d8;
+      --shadow: 0 16px 42px rgba(56, 58, 44, .10);
     }
 
     * { box-sizing: border-box; }
@@ -31,7 +31,7 @@
       min-height: 100vh;
       color: var(--ink);
       background:
-        linear-gradient(180deg, rgba(255,255,255,.8), rgba(246,245,241,.96) 240px),
+        linear-gradient(180deg, rgba(251,246,236,.78), rgba(232,221,204,.96) 240px),
         var(--bg);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
       letter-spacing: 0;
@@ -71,7 +71,7 @@
       color: #333;
     }
 
-    .icon-btn:hover { background: #eee9df; }
+    .icon-btn:hover { background: #dccdb8; }
 
     .brand {
       display: flex;
@@ -87,7 +87,7 @@
       display: grid;
       place-items: center;
       color: white;
-      background: linear-gradient(135deg, var(--accent), #1f4d64);
+      background: linear-gradient(135deg, var(--accent), #383a2c);
       font-weight: 900;
     }
 
@@ -132,7 +132,7 @@
       font-weight: 700;
     }
 
-    .ghost { color: #2e353a; }
+    .ghost { color: #5f4b39; }
 
     .summary {
       display: grid;
@@ -175,7 +175,7 @@
       padding: 5px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: #ebe6dc;
+      background: #ded1bd;
       width: fit-content;
       margin: 12px 0 20px;
     }
@@ -184,7 +184,7 @@
       min-width: 88px;
       min-height: 38px;
       border-radius: 6px;
-      color: #4d5258;
+      color: #6c5b48;
       font-weight: 700;
     }
 
@@ -233,7 +233,7 @@
       height: 0;
       border-top: 7px solid transparent;
       border-bottom: 7px solid transparent;
-      border-left: 10px solid #30353a;
+      border-left: 10px solid #383a2c;
       transform: rotate(90deg);
       transition: transform .16s ease;
     }
@@ -246,7 +246,7 @@
     .day-list,
     .stat-list {
       display: grid;
-      gap: 10px;
+      gap: 16px;
     }
 
     .fixed-item,
@@ -292,7 +292,7 @@
       padding: 0 8px;
       border-radius: 999px;
       background: var(--soft);
-      color: #2f5d4f;
+      color: #5f4b39;
       font-size: 12px;
       font-weight: 700;
       white-space: nowrap;
@@ -321,14 +321,14 @@
 
     .expense-item {
       margin: 0 12px 10px;
-      border-color: #eee9df;
+      border-color: #dfd1bd;
       box-shadow: none;
     }
 
     .highlight {
       display: inline;
       padding: 2px 5px;
-      background: #fff076;
+      background: #efe2a8;
       border-radius: 2px;
     }
 
@@ -336,7 +336,7 @@
       padding: 28px 18px;
       color: var(--muted);
       background: rgba(255,255,255,.6);
-      border: 1px dashed #d6d0c5;
+      border: 1px dashed #c7b69f;
       border-radius: 8px;
       text-align: center;
     }
@@ -380,7 +380,7 @@
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: #fbfaf7;
+      background: #fffaf1;
       padding: 10px 11px;
       color: var(--ink);
       outline: none;
@@ -416,8 +416,9 @@
     }
 
     .insight {
+      border: 1px solid rgba(133, 105, 78, .14);
       border-left: 4px solid var(--accent);
-      background: #fbfaf7;
+      background: linear-gradient(90deg, rgba(133, 105, 78, .10), rgba(56, 58, 44, .04));
       border-radius: 8px;
       padding: 12px 12px 12px 14px;
       line-height: 1.55;
@@ -435,8 +436,8 @@
     }
 
     .year-cell {
-      background: #fbfaf7;
-      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #fffaf1, #f1e7d8);
+      border: 1px solid rgba(133, 105, 78, .14);
       border-radius: 8px;
       padding: 12px;
     }
@@ -463,7 +464,7 @@
     .mini-btn {
       min-width: 34px;
       padding: 0 10px;
-      color: #4d5258;
+      color: #6c5b48;
     }
 
     .danger:hover { color: var(--accent-2); }
@@ -491,32 +492,89 @@
     }
 
     .stat-card {
-      background: var(--panel);
-      border: 1px solid var(--line);
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, #fffaf1, #fbf6ec);
+      border: 1px solid rgba(133, 105, 78, .14);
       border-radius: 8px;
-      padding: 16px;
+      padding: 18px;
+      box-shadow: 0 14px 34px rgba(56, 58, 44, .10);
+    }
+
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 4px;
+      background: linear-gradient(90deg, #85694e, #383a2c, #b79a66);
+      opacity: .9;
+    }
+
+    .stat-card .section-title {
+      font-size: 22px;
+      font-weight: 850;
+    }
+
+    .stat-card .section-title::after {
+      content: "";
+      width: 34px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(133, 105, 78, .18);
+      margin-left: -22px;
+      margin-top: 18px;
     }
 
     .bar-row {
       display: grid;
-      grid-template-columns: 82px minmax(90px, 1fr) 86px;
+      grid-template-columns: 112px minmax(100px, 1fr) 96px;
       gap: 10px;
       align-items: center;
       margin: 11px 0;
     }
 
+    .bar-row strong {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .bar-dot {
+      width: 8px;
+      height: 8px;
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: var(--bar-color, var(--accent));
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--bar-color, var(--accent)) 16%, transparent);
+    }
+
     .bar-track {
-      height: 12px;
+      height: 14px;
       overflow: hidden;
       border-radius: 999px;
-      background: #eee9df;
+      background: #e2d5c2;
     }
 
     .bar {
       height: 100%;
       border-radius: inherit;
-      background: linear-gradient(90deg, var(--accent), var(--gold));
+      background: linear-gradient(90deg, var(--bar-color, var(--accent)), var(--gold));
       width: 0%;
+    }
+
+    .bar-row .money {
+      text-align: right;
+      font-weight: 850;
+    }
+
+    .bar-row .money small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 2px;
     }
 
     .trend {
@@ -525,7 +583,11 @@
       align-items: end;
       gap: 6px;
       height: 160px;
-      padding-top: 12px;
+      padding: 12px 8px 4px;
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(133, 105, 78, .08), transparent),
+        repeating-linear-gradient(180deg, transparent 0 38px, rgba(133, 105, 78, .13) 39px, transparent 40px);
     }
 
     .trend-col {
@@ -538,7 +600,7 @@
     .trend-bar {
       min-height: 3px;
       border-radius: 999px 999px 2px 2px;
-      background: var(--blue);
+      background: linear-gradient(180deg, #85694e, #383a2c);
     }
 
     .trend-label {
@@ -555,7 +617,7 @@
       transform: translateX(-50%) translateY(18px);
       opacity: 0;
       pointer-events: none;
-      background: #202124;
+      background: #383a2c;
       color: white;
       border-radius: 8px;
       padding: 10px 14px;
@@ -907,6 +969,7 @@
     const storeKey = "daily-expense-v2";
     const categories = ["早餐", "午餐", "晚餐", "通行费用", "买菜水果", "其他额外费用", "住房", "固定费用"];
     const dailyCategories = ["早餐", "午餐", "晚餐", "通行费用", "买菜水果", "其他额外费用"];
+    const summaryCategoryOrder = ["住房", "早餐", "午餐", "晚餐", "买菜水果", "其他额外费用", "通行费用", "固定费用"];
     const zeroWords = ["无", "自制", "没有", "0", "0元"];
     const today = new Date();
     let activeTab = "detail";
@@ -1116,6 +1179,40 @@
       );
     }
 
+    function sortCategoryRows(rows) {
+      return [...rows].sort((a, b) => {
+        const aIndex = summaryCategoryOrder.indexOf(a[0]);
+        const bIndex = summaryCategoryOrder.indexOf(b[0]);
+        const safeA = aIndex >= 0 ? aIndex : summaryCategoryOrder.length;
+        const safeB = bIndex >= 0 ? bIndex : summaryCategoryOrder.length;
+        return safeA - safeB || b[1] - a[1] || String(a[0]).localeCompare(String(b[0]), "zh-CN");
+      });
+    }
+
+    function categoryColor(name) {
+      return {
+        "住房": "#85694e",
+        "早餐": "#b79a66",
+        "午餐": "#6f7b61",
+        "晚餐": "#9a8060",
+        "买菜水果": "#7d8a6a",
+        "其他额外费用": "#a65f4b",
+        "通行费用": "#8a8d78",
+        "固定费用": "#383a2c"
+      }[name] || "#85694e";
+    }
+
+    function renderCategoryBars(targetId, rows, total, emptyText) {
+      const maxCategory = Math.max(...rows.map((row) => row[1]), 1);
+      el(targetId).innerHTML = rows.length ? rows.map(([name, value]) => `
+        <div class="bar-row" style="--bar-color:${categoryColor(name)}">
+          <strong><span class="bar-dot"></span>${escapeHtml(name)}</strong>
+          <div class="bar-track"><div class="bar" style="width:${Math.max(4, value / maxCategory * 100)}%"></div></div>
+          <span class="money">${compactMoney(value)}<small>${total ? ((value / total) * 100).toFixed(1) : "0.0"}%</small></span>
+        </div>
+      `).join("") : `<div class="empty">${emptyText}</div>`;
+    }
+
     function normalizeDate(input, context) {
       const text = String(input || "").trim();
       let match = text.match(/^\s*(\d{4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})\s*(?:日|\s|$)/);
@@ -1152,11 +1249,6 @@
           context.section = "daily";
           return;
         }
-        if (context.section === "fixed") {
-          parseFixedLine(cleaned, selectedMonth).forEach((item) => imported.fixed.push(item));
-          return;
-        }
-
         const fullDate = normalizeDate(cleaned, context);
         if (fullDate) {
           context.date = fullDate;
@@ -1175,6 +1267,11 @@
           context.section = "daily";
           cleaned = cleaned.replace(/^(\d{1,2})\s*月\s*(\d{1,2})\s*日?/, "").trim();
           if (!cleaned) return;
+        }
+
+        if (context.section === "fixed") {
+          parseFixedLine(cleaned, selectedMonth).forEach((item) => imported.fixed.push(item));
+          return;
         }
 
         const csv = cleaned.split(/[\t,，]/).map((part) => part.trim()).filter(Boolean);
@@ -1437,15 +1534,8 @@
     function renderStats(items) {
       const byCategory = new Map();
       items.forEach((item) => byCategory.set(item.category, (byCategory.get(item.category) || 0) + Number(item.amount || 0)));
-      const categoryRows = [...byCategory.entries()].sort((a, b) => b[1] - a[1]);
-      const maxCategory = Math.max(...categoryRows.map((row) => row[1]), 1);
-      el("categoryBars").innerHTML = categoryRows.length ? categoryRows.map(([name, value]) => `
-        <div class="bar-row">
-          <strong>${escapeHtml(name)}</strong>
-          <div class="bar-track"><div class="bar" style="width:${Math.max(4, value / maxCategory * 100)}%"></div></div>
-          <span class="money">${compactMoney(value)}</span>
-        </div>
-      `).join("") : `<div class="empty">暂无统计数据</div>`;
+      const categoryRows = sortCategoryRows([...byCategory.entries()]);
+      renderCategoryBars("categoryBars", categoryRows, sum(items), "暂无统计数据");
 
       const { days } = monthBounds(activeMonth);
       const dayTotals = Array.from({ length: days }, (_, index) => {
@@ -1480,8 +1570,30 @@
       }
       const previousTotal = samePeriodTotal(activeMonth);
       const fixedTotal = sum(fixedForMonth(activeMonth));
-      const topCategory = categoryRows[0];
+      const dailyItems = monthExpenses(activeMonth);
+      const recordDays = new Set(dailyItems.map((item) => item.date)).size;
+      const topCategory = [...categoryRows].sort((a, b) => b[1] - a[1])[0];
+      const monthName = monthText(activeMonth);
       const advices = [];
+
+      advices.push({
+        title: `${monthName}优点`,
+        body: `本月已经记录 ${recordDays} 天、${items.length} 笔花销，数据能看出主要支出结构。继续保持每天记录，比月底回忆更准确。`
+      });
+
+      if (topCategory) {
+        advices.push({
+          title: "本月主要问题",
+          body: `${topCategory[0]}是本月占比最高的分类，金额 ${compactMoney(topCategory[1])}，占本月 ${((topCategory[1] / total) * 100).toFixed(1)}%。后续复盘可以优先看这个分类有没有可调整空间。`
+        });
+      }
+
+      advices.push({
+        title: "下月建议",
+        body: fixedTotal / total > 0.45
+          ? `固定费用占比偏高，建议先检查会员、流量卡、路由器等自动续费；这类支出一旦减少，每个月都会持续变轻。`
+          : `建议下月继续按早餐、午餐、晚餐、通行、买菜水果和其他额外费用记录，月底再对比哪个分类变化最大。`
+      });
 
       if (previousTotal) {
         const diff = total - previousTotal;
@@ -1491,13 +1603,6 @@
           body: diff === 0
             ? "整体节奏比较稳定，可以继续保持现在的记录习惯。"
             : `${diff > 0 ? "多花" : "少花"} ${compactMoney(Math.abs(diff))}，变化约 ${pct.toFixed(1)}%。建议重点回看本月新增的大额支出。`
-        });
-      }
-
-      if (topCategory) {
-        advices.push({
-          title: `主要支出集中在${topCategory[0]}`,
-          body: `${topCategory[0]}占本月 ${((topCategory[1] / total) * 100).toFixed(1)}%。如果想控支，先从这个分类找 1 到 2 个可调整项最有效。`
         });
       }
 
@@ -1515,7 +1620,7 @@
         });
       }
 
-      el("monthlyAdvice").innerHTML = advices.slice(0, 4).map((item) => `
+      el("monthlyAdvice").innerHTML = advices.slice(0, 5).map((item) => `
         <div class="insight">
           <strong>${escapeHtml(item.title)}</strong>
           <span>${escapeHtml(item.body)}</span>
@@ -1559,15 +1664,8 @@
 
       const byCategory = new Map();
       yearItems.forEach((item) => byCategory.set(item.category, (byCategory.get(item.category) || 0) + Number(item.amount || 0)));
-      const categoryRows = [...byCategory.entries()].sort((a, b) => b[1] - a[1]);
-      const maxCategory = Math.max(...categoryRows.map((row) => row[1]), 1);
-      el("yearCategoryBars").innerHTML = categoryRows.length ? categoryRows.map(([name, value]) => `
-        <div class="bar-row">
-          <strong>${escapeHtml(name)}</strong>
-          <div class="bar-track"><div class="bar" style="width:${Math.max(4, value / maxCategory * 100)}%"></div></div>
-          <span class="money">${compactMoney(value)}</span>
-        </div>
-      `).join("") : `<div class="empty">暂无年度数据</div>`;
+      const categoryRows = sortCategoryRows([...byCategory.entries()]);
+      renderCategoryBars("yearCategoryBars", categoryRows, yearTotal, "暂无年度数据");
 
       renderYearAdvice(yearTotal, months, categoryRows, fixedYear);
     }
@@ -1578,11 +1676,24 @@
         return;
       }
       const biggestMonth = [...months].sort((a, b) => b.total - a.total)[0];
-      const topCategory = categoryRows[0];
+      const activeMonths = months.filter((month) => month.total > 0);
+      const topCategory = [...categoryRows].sort((a, b) => b[1] - a[1])[0];
       const advices = [
         {
-          title: "年度现金流概览",
-          body: `全年已统计 ${compactMoney(yearTotal)}，平均每月 ${compactMoney(yearTotal / 12)}。后续可以把这个月均值作为预算基线。`
+          title: "年度优点",
+          body: `今年已经记录 ${activeMonths.length} 个月、累计 ${compactMoney(yearTotal)}，平均每月 ${compactMoney(yearTotal / 12)}。这可以作为之后做预算的基准。`
+        },
+        {
+          title: "年度问题",
+          body: biggestMonth && biggestMonth.total
+            ? `${biggestMonth.month}月是今年支出高峰，金额 ${compactMoney(biggestMonth.total)}。建议回看这个月是否有房租、一次性购物、医疗或出行等特殊项目。`
+            : "年度数据还比较少，暂时看不出明显高峰月份。"
+        },
+        {
+          title: "年度建议",
+          body: fixedYear / yearTotal > 0.35
+            ? `固定费用全年约 ${compactMoney(fixedYear)}，占比偏高。想降低每月最低开销，优先清理自动续费会比压缩小额消费更直接。`
+            : "后续可以把月均支出作为预算线，超过月均较多的月份重点复盘原因。"
         }
       ];
       if (biggestMonth && biggestMonth.total) {
