@@ -222,6 +222,12 @@
       line-height: 1.2;
     }
 
+    .section-title[data-toggle],
+    .day-head[data-toggle] {
+      cursor: pointer;
+      user-select: none;
+    }
+
     .chev {
       width: 0;
       height: 0;
@@ -229,6 +235,11 @@
       border-bottom: 7px solid transparent;
       border-left: 10px solid #30353a;
       transform: rotate(90deg);
+      transition: transform .16s ease;
+    }
+
+    .chev.closed {
+      transform: rotate(0deg);
     }
 
     .fixed-list,
@@ -457,6 +468,15 @@
 
     .danger:hover { color: var(--accent-2); }
 
+    .empty-expense {
+      opacity: .68;
+    }
+
+    .empty-expense .money {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
     .inline-editor {
       grid-column: 1 / -1;
       display: grid;
@@ -599,6 +619,9 @@
           <input class="month-picker" id="monthPicker" type="month">
           <button class="primary" id="quickAdd">记一笔</button>
           <button class="ghost" id="showImport">批量导入</button>
+          <button class="ghost danger" id="showCleanup">数据清理</button>
+          <button class="ghost danger" id="deleteMonthData">删除本月</button>
+          <button class="ghost danger" id="clearAllData">全部归零</button>
           <button class="ghost" id="exportJson">导出数据</button>
         </div>
       </div>
@@ -632,14 +655,14 @@
         <div id="detailView">
           <section class="section">
             <div class="section-head">
-              <h2 class="section-title"><span class="chev"></span>固定费用</h2>
+              <h2 class="section-title" data-toggle="fixed"><span class="chev" data-chev="fixed"></span>固定费用</h2>
               <strong id="fixedTotal">¥0.00</strong>
             </div>
             <div class="fixed-list" id="fixedPreview"></div>
           </section>
           <section class="section">
             <div class="section-head">
-              <h2 class="section-title"><span class="chev"></span>每日明细</h2>
+              <h2 class="section-title" data-toggle="daily"><span class="chev" data-chev="daily"></span>每日明细</h2>
               <strong id="dailyTotal">¥0.00</strong>
             </div>
             <div class="day-list" id="dayList"></div>
@@ -711,7 +734,7 @@
         <div id="fixedView" hidden>
           <section class="section">
             <div class="section-head">
-              <h2 class="section-title"><span class="chev"></span>固定费用</h2>
+              <h2 class="section-title" data-toggle="fixedManage"><span class="chev" data-chev="fixedManage"></span>固定费用</h2>
               <strong id="fixedManageTotal">¥0.00</strong>
             </div>
             <div class="fixed-list" id="fixedManage"></div>
@@ -720,9 +743,42 @@
       </div>
 
       <aside class="side">
+        <div class="panel" id="cleanupPanel" hidden>
+          <h3>数据清理</h3>
+          <div class="form">
+            <div class="field">
+              <label for="cleanupDayInput">归零某一天</label>
+              <div class="two">
+                <input id="cleanupDayInput" type="date">
+                <button class="ghost danger" type="button" id="deleteDayData">归零这一天</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="cleanupMonthInput">归零某个月</label>
+              <div class="two">
+                <input id="cleanupMonthInput" type="month">
+                <button class="ghost danger" type="button" id="deleteSelectedMonthData">归零这个月</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="cleanupYearInput">归零某一年</label>
+              <div class="two">
+                <input id="cleanupYearInput" type="number" min="2000" max="2100" placeholder="2026">
+                <button class="ghost danger" type="button" id="deleteSelectedYearData">归零这一年</button>
+              </div>
+            </div>
+            <button class="primary danger" type="button" id="clearAllDataPanel">全部数据归零</button>
+            <div class="helper">这些按钮会删除已经写入本机浏览器的数据。删除后不能自动恢复，建议先导出备份。</div>
+          </div>
+        </div>
+
         <div class="panel" id="importPanel" hidden>
           <h3>批量导入</h3>
           <form class="form" id="importForm">
+            <div class="field">
+              <label for="importMonth">导入月份</label>
+              <input id="importMonth" type="month" required>
+            </div>
             <div class="field">
               <label for="importText">粘贴旧记录</label>
               <textarea class="import-box" id="importText" placeholder="2026年5月
@@ -748,6 +804,23 @@
             <input id="restoreJson" type="file" accept="application/json,.json">
           </div>
           <div class="helper">电脑上点“导出数据”，把 JSON 文件发到手机；手机打开这个页面后，用这里恢复备份。</div>
+          <div class="field" style="margin-top:14px">
+            <label>数据清理</label>
+            <div class="two">
+              <input id="clearDayInput" type="date">
+              <button class="ghost danger" type="button" id="deleteDayDataInImport">归零这一天</button>
+            </div>
+            <div class="two">
+              <input id="clearMonthInput" type="month">
+              <button class="ghost danger" type="button" id="deleteMonthDataInImport">归零这个月</button>
+            </div>
+            <div class="two">
+              <input id="clearYearInput" type="number" min="2000" max="2100" placeholder="年份，例如 2026">
+              <button class="ghost danger" type="button" id="deleteYearDataInImport">归零这一年</button>
+            </div>
+            <button class="ghost danger" type="button" id="clearAllDataInImport">全部数据归零</button>
+          </div>
+          <div class="helper">按天、按月、按年是分开的按钮；全部数据归零会清空所有年份。</div>
         </div>
 
         <div class="panel">
@@ -831,32 +904,20 @@
   <div class="toast" id="toast">已保存</div>
 
   <script>
-    const storeKey = "daily-expense-v1";
-    const categories = ["餐饮", "住房", "交通", "生活缴费", "会员订阅", "购物", "医疗", "其他"];
+    const storeKey = "daily-expense-v2";
+    const categories = ["早餐", "午餐", "晚餐", "通行费用", "买菜水果", "其他额外费用", "住房", "固定费用"];
+    const dailyCategories = ["早餐", "午餐", "晚餐", "通行费用", "买菜水果", "其他额外费用"];
     const zeroWords = ["无", "自制", "没有", "0", "0元"];
     const today = new Date();
     let activeTab = "detail";
     let activeMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+    let collapsedSections = { fixed: false, daily: false, fixedManage: false };
+    let collapsedDays = new Set();
 
     const seed = {
-      expenses: [
-        { id: crypto.randomUUID(), date: "2026-05-01", name: "房租", amount: 416, category: "住房", type: "daily", note: "" },
-        { id: crypto.randomUUID(), date: "2026-05-01", name: "早餐", amount: 6, category: "餐饮", type: "daily", note: "" },
-        { id: crypto.randomUUID(), date: "2026-05-01", name: "午餐", amount: 15.3, category: "餐饮", type: "daily", note: "" },
-        { id: crypto.randomUUID(), date: "2026-05-01", name: "晚餐", amount: 13.09, category: "餐饮", type: "daily", note: "" },
-        { id: crypto.randomUUID(), date: "2026-05-02", name: "电动车充电", amount: 3.78, category: "生活缴费", type: "daily", note: "" },
-        { id: crypto.randomUUID(), date: "2026-05-02", name: "买菜", amount: 13.2, category: "餐饮", type: "daily", note: "" },
-        { id: crypto.randomUUID(), date: "2026-05-02", name: "剪头发", amount: 25, category: "其他", type: "daily", note: "" },
-        { id: crypto.randomUUID(), date: "2026-04-01", name: "房租", amount: 416, category: "住房", type: "daily", note: "" },
-        { id: crypto.randomUUID(), date: "2026-04-01", name: "早餐", amount: 7, category: "餐饮", type: "daily", note: "" },
-        { id: crypto.randomUUID(), date: "2026-04-02", name: "买菜", amount: 20, category: "餐饮", type: "daily", note: "" }
-      ],
-      fixed: [
-        { id: crypto.randomUUID(), name: "联通保号", amount: 9, category: "生活缴费", day: 1, note: "" },
-        { id: crypto.randomUUID(), name: "电信流量卡", amount: 29, category: "生活缴费", day: 1, note: "" },
-        { id: crypto.randomUUID(), name: "WiFi路由器", amount: 29.9, category: "生活缴费", day: 1, note: "" },
-        { id: crypto.randomUUID(), name: "听书会员", amount: 19, category: "会员订阅", day: 11, note: "微信自动续费" }
-      ]
+      expenses: [],
+      fixed: [],
+      deletedFixedMonths: []
     };
 
     let data = loadData();
@@ -879,15 +940,53 @@
       }
       try {
         const parsed = JSON.parse(raw);
-        return { expenses: parsed.expenses || [], fixed: parsed.fixed || [] };
+        return { expenses: parsed.expenses || [], fixed: parsed.fixed || [], deletedFixedMonths: parsed.deletedFixedMonths || [] };
       } catch {
         return structuredClone(seed);
       }
     }
 
     function saveData() {
+      data = normalizeData(data);
       localStorage.setItem(storeKey, JSON.stringify(data));
     }
+
+    function normalizeData(source) {
+      const normalized = {
+        expenses: Array.isArray(source.expenses) ? [...source.expenses] : [],
+        fixed: Array.isArray(source.fixed) ? [...source.fixed] : [],
+        deletedFixedMonths: Array.isArray(source.deletedFixedMonths) ? [...source.deletedFixedMonths] : []
+      };
+      const rentItems = normalized.expenses.filter((item) => /房租|租金/.test(item.name || ""));
+      if (rentItems.length && !normalized.fixed.some((item) => /房租|租金/.test(item.name || ""))) {
+        const latestRent = [...rentItems].sort((a, b) => String(b.date).localeCompare(String(a.date)))[0];
+        normalized.fixed.unshift({
+          id: crypto.randomUUID(),
+          name: latestRent.name || "房租",
+          amount: Number(latestRent.amount || 0),
+          category: "住房",
+          day: Number(String(latestRent.date || "").slice(8, 10)) || 1,
+          month: String(latestRent.date || activeMonth).slice(0, 7),
+          note: latestRent.note || ""
+        });
+      }
+      normalized.fixed = normalized.fixed
+        .map((item) => ({
+          ...item,
+          category: categories.includes(item.category) ? item.category : inferCategory(item.name, "固定费用"),
+          day: Number(item.day || 1),
+          amount: Number(item.amount || 0)
+        }))
+        .filter((item) => item.month);
+      normalized.expenses = normalized.expenses.map((item) => ({
+        ...item,
+        category: dailyCategories.includes(item.category) ? item.category : inferCategory(item.name, item.category)
+      }));
+      normalized.expenses = normalized.expenses.filter((item) => !/房租|租金/.test(item.name || ""));
+      return normalized;
+    }
+
+    saveData();
 
     function showToast(text) {
       const toast = el("toast");
@@ -915,8 +1014,9 @@
     }
 
     function fixedForMonth(ym) {
+      if (data.deletedFixedMonths?.includes(ym)) return [];
       const { days } = monthBounds(ym);
-      return data.fixed.map((item) => ({
+      return data.fixed.filter((item) => item.month === ym).map((item) => ({
         ...item,
         date: `${ym}-${String(Math.min(Number(item.day), days)).padStart(2, "0")}`,
         type: "fixed"
@@ -960,16 +1060,36 @@
       select.innerHTML = categories.map((name) => `<option value="${name}">${name}</option>`).join("");
     }
 
-    function inferCategory(name, fallback = "其他") {
+    function isZeroText(value) {
+      const text = String(value || "").replace(/[·.。,\s，、；;：:]/g, "");
+      return zeroWords.some((word) => text === word.replace(/[·.。,\s，、；;：:]/g, ""));
+    }
+
+    function inferCategory(name, fallback = "其他额外费用") {
       const text = String(name || "");
-      if (/早|午|晚|餐|饭|菜|水果|饮料|咖啡|奶茶|面|粉|包子/.test(text)) return "餐饮";
+      if (/早餐|早饭|早/.test(text)) return "早餐";
+      if (/午餐|午饭|中餐|中饭|午/.test(text)) return "午餐";
+      if (/晚餐|晚饭|晚/.test(text)) return "晚餐";
+      if (/电动车|充电|地铁|公交|打车|滴滴|车费|通行|交通|火车|高铁|机票/.test(text)) return "通行费用";
+      if (/买菜|菜|水果|果|瓜|西瓜|木瓜|蔬菜|肉|米|面|油|水|超市|辣椒酱|泡面|调料/.test(text)) return "买菜水果";
+      if (/淘宝|京东|拼多多|电商|网购|购物|衣服|鞋|剪头发|理发|饮料|咖啡|奶茶|零食/.test(text)) return "其他额外费用";
       if (/房租|租金|物业|住宿/.test(text)) return "住房";
-      if (/公交|地铁|打车|滴滴|车费|火车|高铁|机票|交通/.test(text)) return "交通";
-      if (/电动车|充电|流量|话费|水费|电费|燃气|宽带|wifi|WiFi|路由器/.test(text)) return "生活缴费";
-      if (/会员|订阅|续费/.test(text)) return "会员订阅";
-      if (/药|医院|门诊|挂号|医疗/.test(text)) return "医疗";
-      if (/买|购物|衣服|鞋|淘宝|京东|拼多多/.test(text)) return "购物";
-      return categories.includes(fallback) ? fallback : "其他";
+      if (/会员|订阅|续费|流量|话费|水费|电费|燃气|宽带|wifi|WiFi|路由器/.test(text)) return "固定费用";
+      return categories.includes(fallback) ? fallback : "其他额外费用";
+    }
+
+    function dailySortIndex(item) {
+      const category = item.category || inferCategory(item.name);
+      const index = dailyCategories.indexOf(category);
+      return index >= 0 ? index * 10 : 90;
+    }
+
+    function sortDailyItems(items) {
+      return [...items].sort((a, b) =>
+        dailySortIndex(a) - dailySortIndex(b) ||
+        String(a.name || "").localeCompare(String(b.name || ""), "zh-CN") ||
+        Number(a.amount || 0) - Number(b.amount || 0)
+      );
     }
 
     function normalizeDate(input, context) {
@@ -981,25 +1101,37 @@
       return "";
     }
 
-    function parseImportText(text) {
-      const [defaultYear, defaultMonth] = activeMonth.split("-").map(Number);
-      const context = { year: defaultYear, month: defaultMonth, date: "" };
-      const imported = [];
+    function parseImportText(text, selectedMonth = activeMonth) {
+      const [defaultYear, defaultMonth] = selectedMonth.split("-").map(Number);
+      const context = { year: defaultYear, month: defaultMonth, date: "", section: "daily" };
+      const imported = { expenses: [], fixed: [] };
       const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
 
       lines.forEach((line) => {
         let cleaned = line.replace(/^[\s\-*•、]+/, "").trim();
+        if (/固定费用|固定支出|每月固定/.test(cleaned)) {
+          context.section = "fixed";
+          const rest = cleaned.replace(/^[▶▼▾\s-]*固定(费用|支出)?[：:]?/, "").trim();
+          if (rest) parseFixedLine(rest, selectedMonth).forEach((item) => imported.fixed.push(item));
+          return;
+        }
+        if (/每日明细|日常花销|日常支出/.test(cleaned)) {
+          context.section = "daily";
+          return;
+        }
         const monthMatch = cleaned.match(/(\d{4})\s*年\s*(\d{1,2})\s*月/);
         if (monthMatch) {
           context.year = Number(monthMatch[1]);
           context.month = Number(monthMatch[2]);
           context.date = "";
+          context.section = "daily";
           return;
         }
 
         const fullDate = normalizeDate(cleaned, context);
         if (fullDate) {
           context.date = fullDate;
+          context.section = "daily";
           cleaned = cleaned
             .replace(/^\d{4}[-/.年]\d{1,2}[-/.月]\d{1,2}日?/, "")
             .replace(/^\d{1,2}[-/.月]\d{1,2}日?/, "")
@@ -1011,13 +1143,14 @@
         if (monthDay) {
           context.month = Number(monthDay[1]);
           context.date = `${context.year}-${String(context.month).padStart(2, "0")}-${String(monthDay[2]).padStart(2, "0")}`;
+          context.section = "daily";
           cleaned = cleaned.replace(/^(\d{1,2})\s*月\s*(\d{1,2})\s*日?/, "").trim();
           if (!cleaned) return;
         }
 
         const csv = cleaned.split(/[\t,，]/).map((part) => part.trim()).filter(Boolean);
         if (csv.length >= 3 && normalizeDate(csv[0], context) && Number.isFinite(Number(csv[2]))) {
-          imported.push({
+          imported.expenses.push({
             id: crypto.randomUUID(),
             date: normalizeDate(csv[0], context),
             name: csv[1],
@@ -1029,11 +1162,40 @@
           return;
         }
 
-        if (!context.date || zeroWords.some((word) => cleaned === word || cleaned.endsWith(`：${word}`) || cleaned.endsWith(`:${word}`))) return;
-        parseExpenseLine(cleaned, context.date).forEach((item) => imported.push(item));
+        if (isZeroText(cleaned) || cleaned.split(/[：:]/).some((part, index) => index > 0 && isZeroText(part))) return;
+        if (context.section === "fixed") {
+          parseFixedLine(cleaned, selectedMonth).forEach((item) => imported.fixed.push(item));
+          return;
+        }
+        if (!context.date) return;
+        parseExpenseLine(cleaned, context.date).forEach((item) => imported.expenses.push(item));
       });
 
       return imported;
+    }
+
+    function parseFixedLine(line, month = activeMonth) {
+      const results = [];
+      const cleaned = line.replace(/[（）()]/g, " ").replace(/自动续费/g, " 自动续费 ");
+      const parts = cleaned.split(/[，,、；;]/).map((part) => part.trim()).filter(Boolean);
+      parts.forEach((part) => {
+        const match = part.match(/^(.+?)[：:\s]*(\d+(?:\.\d+)?)\s*元?/);
+        if (!match) return;
+        const name = match[1].replace(/手机流量费|固定费用|固定支出/g, "").trim();
+        const amount = Number(match[2]);
+        if (!name || !Number.isFinite(amount) || amount <= 0) return;
+        const dayMatch = part.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*日|每月\s*(\d{1,2})\s*日|(\d{1,2})\s*日/);
+        results.push({
+          id: crypto.randomUUID(),
+          name,
+          amount,
+          category: inferCategory(name),
+          day: Number(dayMatch?.[2] || dayMatch?.[3] || dayMatch?.[4] || 1),
+          month,
+          note: /自动续费|续费/.test(part) ? "自动续费" : ""
+        });
+      });
+      return results;
     }
 
     function parseExpenseLine(line, date) {
@@ -1041,7 +1203,7 @@
       const colon = line.match(/^(.+?)[：:]\s*(.+)$/);
       const label = colon ? colon[1].trim() : "";
       const body = colon ? colon[2].trim() : line;
-      if (zeroWords.includes(body)) return results;
+      if (isZeroText(body)) return results;
       const amountOnly = body.match(/^(\d+(?:\.\d+)?)\s*元?$/);
       if (label && amountOnly) {
         results.push({
@@ -1058,7 +1220,7 @@
 
       const parts = body.split(/[，,、；;]/).map((part) => part.trim()).filter(Boolean);
       parts.forEach((part) => {
-        if (zeroWords.includes(part)) return;
+        if (isZeroText(part)) return;
         const match = part.match(/^(.+?)[\s：:]*(\d+(?:\.\d+)?)\s*元?$/) || part.match(/^(.+?)(\d+(?:\.\d+)?)\s*元?/);
         if (!match) return;
         let name = match[1].replace(/[：:]/g, "").trim();
@@ -1108,9 +1270,14 @@
       renderStats(allItems);
       renderAnnual();
       renderTab();
+      renderCollapseState();
     }
 
     function renderFixedPreview(items) {
+      if (collapsedSections.fixed) {
+        el("fixedPreview").innerHTML = "";
+        return;
+      }
       el("fixedPreview").innerHTML = items.length ? items.map((item) => `
         <article class="fixed-item">
           <div>
@@ -1124,20 +1291,44 @@
     }
 
     function renderDays(items) {
+      if (collapsedSections.daily) {
+        el("dayList").innerHTML = "";
+        return;
+      }
       const grouped = groupBy(items.sort((a, b) => a.date.localeCompare(b.date)), (item) => item.date);
       const html = [...grouped.entries()].map(([date, list]) => {
         const dayTotal = sum(list);
+        const isClosed = collapsedDays.has(date);
         return `
           <article class="day-card">
-            <div class="day-head">
-              <div class="day-title"><span class="chev"></span>${dateDayText(date)}</div>
+            <div class="day-head" data-toggle-day="${date}">
+              <div class="day-title"><span class="chev ${isClosed ? "closed" : ""}"></span>${dateDayText(date)}</div>
               <strong>${compactMoney(dayTotal)}</strong>
             </div>
-            ${list.map((item) => expenseRow(item)).join("")}
+            ${isClosed ? "" : renderDailyCategoryRows(list)}
           </article>
         `;
       }).join("");
       el("dayList").innerHTML = html || `<div class="empty">这个月还没有日常花销</div>`;
+    }
+
+    function renderDailyCategoryRows(list) {
+      return dailyCategories.map((category) => {
+        const items = sortDailyItems(list).filter((item) => (item.category || inferCategory(item.name)) === category);
+        if (!items.length) {
+          return `
+            <article class="expense-item empty-expense">
+              <div>
+                <div class="item-name">${category}</div>
+                <div class="item-note">无</div>
+              </div>
+              <span class="money">无</span>
+              <span class="tag">${category}</span>
+            </article>
+          `;
+        }
+        return items.map((item) => expenseRow({ ...item, category })).join("");
+      }).join("");
     }
 
     function expenseRow(item) {
@@ -1196,20 +1387,25 @@
     }
 
     function renderFixedManage() {
-      el("fixedManage").innerHTML = data.fixed.length ? data.fixed.map((item) => `
+      if (collapsedSections.fixedManage) {
+        el("fixedManage").innerHTML = "";
+        return;
+      }
+      const items = fixedForMonth(activeMonth);
+      el("fixedManage").innerHTML = items.length ? items.map((item) => `
         <article class="fixed-item">
           <div>
             <div class="item-name">${escapeHtml(item.name)}</div>
             ${item.note ? `<div class="item-note">${escapeHtml(item.note)}</div>` : ""}
           </div>
           <span class="money">${compactMoney(item.amount)}</span>
-          <span class="tag">每月${item.day}日</span>
+          <span class="tag">${Number(item.month.slice(5, 7))}月${item.day}日</span>
           <div class="actions">
             <button class="mini-btn" title="编辑" aria-label="编辑" data-edit-fixed="${item.id}">✎</button>
             <button class="mini-btn danger" title="删除" aria-label="删除" data-delete-fixed="${item.id}">×</button>
           </div>
         </article>
-      `).join("") : `<div class="empty">暂无固定费用</div>`;
+      `).join("") : `<div class="empty">这个月暂无固定费用</div>`;
     }
 
     function renderStats(items) {
@@ -1397,6 +1593,12 @@
       el("fixedView").hidden = activeTab !== "fixed";
     }
 
+    function renderCollapseState() {
+      document.querySelectorAll("[data-chev]").forEach((chev) => {
+        chev.classList.toggle("closed", Boolean(collapsedSections[chev.dataset.chev]));
+      });
+    }
+
     function escapeHtml(text) {
       return String(text || "").replace(/[&<>"']/g, (char) => ({
         "&": "&amp;",
@@ -1413,7 +1615,7 @@
       el("expenseDate").value = `${activeMonth}-${String(Math.min(today.getDate(), monthBounds(activeMonth).days)).padStart(2, "0")}`;
       el("expenseAmount").value = "";
       el("expenseName").value = "";
-      el("expenseCategory").value = "餐饮";
+      el("expenseCategory").value = "早餐";
       el("expenseType").value = "daily";
       el("expenseNote").value = "";
     }
@@ -1424,7 +1626,7 @@
       el("fixedName").value = "";
       el("fixedAmount").value = "";
       el("fixedDay").value = "1";
-      el("fixedCategory").value = "生活缴费";
+      el("fixedCategory").value = "固定费用";
       el("fixedNote").value = "";
     }
 
@@ -1462,6 +1664,7 @@
         amount: Number(el("fixedAmount").value),
         category: el("fixedCategory").value,
         day: Number(el("fixedDay").value),
+        month: activeMonth,
         note: el("fixedNote").value.trim()
       };
       const index = data.fixed.findIndex((fixed) => fixed.id === id);
@@ -1473,7 +1676,66 @@
       showToast("已保存");
     }
 
+    function deleteDayData(date) {
+      const targetDate = date || `${activeMonth}-01`;
+      data.expenses = data.expenses.filter((expense) => String(expense.date || "") !== targetDate);
+      data.fixed = data.fixed.filter((item) => {
+        const fixedDate = `${item.month}-${String(Number(item.day || 1)).padStart(2, "0")}`;
+        return fixedDate !== targetDate;
+      });
+      editingExpenseId = "";
+      saveData();
+      render();
+      showToast(`${targetDate}已归零`);
+    }
+
+    function deleteMonthData(month = activeMonth) {
+      data.expenses = data.expenses.filter((expense) => !String(expense.date || "").startsWith(month));
+      data.fixed = data.fixed.filter((item) => item.month !== month);
+      data.deletedFixedMonths = [...new Set([...(data.deletedFixedMonths || []), month])];
+      editingExpenseId = "";
+      saveData();
+      render();
+      showToast(`${monthText(month)}已归零`);
+    }
+
+    function deleteYearData(year = Number(activeMonth.slice(0, 4))) {
+      const yearText = String(year);
+      data.expenses = data.expenses.filter((expense) => !String(expense.date || "").startsWith(`${yearText}-`));
+      data.fixed = data.fixed.filter((item) => !String(item.month || "").startsWith(`${yearText}-`));
+      const months = Array.from({ length: 12 }, (_, index) => `${yearText}-${String(index + 1).padStart(2, "0")}`);
+      data.deletedFixedMonths = [...new Set([...(data.deletedFixedMonths || []), ...months])];
+      editingExpenseId = "";
+      saveData();
+      render();
+      showToast(`${yearText}年已归零`);
+    }
+
+    function clearAllExpenseData() {
+      data = structuredClone(seed);
+      editingExpenseId = "";
+      collapsedDays = new Set();
+      saveData();
+      render();
+      showToast("全部数据已归零");
+    }
+
     document.addEventListener("click", (event) => {
+      const sectionToggle = event.target.closest("[data-toggle]");
+      if (sectionToggle) {
+        const key = sectionToggle.dataset.toggle;
+        collapsedSections[key] = !collapsedSections[key];
+        render();
+        return;
+      }
+      const dayToggle = event.target.closest("[data-toggle-day]");
+      if (dayToggle) {
+        const key = dayToggle.dataset.toggleDay;
+        if (collapsedDays.has(key)) collapsedDays.delete(key);
+        else collapsedDays.add(key);
+        render();
+        return;
+      }
       const target = event.target.closest("button");
       if (!target) return;
       if (target.dataset.tab) {
@@ -1553,28 +1815,77 @@
       renderTab();
       el("expenseName").focus();
     });
+    el("showCleanup").addEventListener("click", () => {
+      const panel = el("cleanupPanel");
+      panel.hidden = !panel.hidden;
+      if (!panel.hidden) {
+        el("cleanupDayInput").value = `${activeMonth}-01`;
+        el("cleanupMonthInput").value = activeMonth;
+        el("cleanupYearInput").value = activeMonth.slice(0, 4);
+      }
+    });
     el("showImport").addEventListener("click", () => {
       const panel = el("importPanel");
       panel.hidden = !panel.hidden;
-      if (!panel.hidden) el("importText").focus();
+      if (!panel.hidden) {
+        el("importMonth").value = activeMonth;
+        el("clearDayInput").value = `${activeMonth}-01`;
+        el("clearMonthInput").value = activeMonth;
+        el("clearYearInput").value = activeMonth.slice(0, 4);
+        el("importText").focus();
+      }
     });
     el("clearImport").addEventListener("click", () => {
       el("importText").value = "";
       el("importResult").textContent = "";
     });
+    el("deleteMonthData").addEventListener("click", () => {
+      deleteMonthData(activeMonth);
+    });
+    el("clearAllData").addEventListener("click", () => {
+      clearAllExpenseData();
+    });
+    el("deleteDayData").addEventListener("click", () => {
+      deleteDayData(el("cleanupDayInput").value);
+    });
+    el("deleteSelectedMonthData").addEventListener("click", () => {
+      deleteMonthData(el("cleanupMonthInput").value || activeMonth);
+    });
+    el("deleteSelectedYearData").addEventListener("click", () => {
+      deleteYearData(Number(el("cleanupYearInput").value || activeMonth.slice(0, 4)));
+    });
+    el("clearAllDataPanel").addEventListener("click", () => {
+      clearAllExpenseData();
+    });
+    el("deleteDayDataInImport").addEventListener("click", () => {
+      deleteDayData(el("clearDayInput").value);
+    });
+    el("deleteMonthDataInImport").addEventListener("click", () => {
+      deleteMonthData(el("clearMonthInput").value || activeMonth);
+    });
+    el("deleteYearDataInImport").addEventListener("click", () => {
+      deleteYearData(Number(el("clearYearInput").value || activeMonth.slice(0, 4)));
+    });
+    el("clearAllDataInImport").addEventListener("click", () => {
+      clearAllExpenseData();
+    });
     el("importForm").addEventListener("submit", (event) => {
       event.preventDefault();
-      const imported = parseImportText(el("importText").value);
-      if (!imported.length) {
+      const targetMonth = el("importMonth").value || activeMonth;
+      const imported = parseImportText(el("importText").value, targetMonth);
+      const importedCount = imported.expenses.length + imported.fixed.length;
+      if (!importedCount) {
         el("importResult").textContent = "没有识别到可导入的花销";
         return;
       }
-      data.expenses.push(...imported);
-      activeMonth = imported[0].date.slice(0, 7);
+      data.expenses.push(...imported.expenses);
+      data.fixed.push(...imported.fixed);
+      data.deletedFixedMonths = (data.deletedFixedMonths || []).filter((month) => month !== targetMonth);
+      activeMonth = imported.expenses[0]?.date.slice(0, 7) || targetMonth;
       saveData();
       render();
-      el("importResult").textContent = `已导入 ${imported.length} 笔`;
-      showToast(`已导入 ${imported.length} 笔`);
+      el("importResult").textContent = `已导入日常 ${imported.expenses.length} 笔，固定费用 ${imported.fixed.length} 笔`;
+      showToast(`已导入 ${importedCount} 笔`);
     });
     el("restoreJson").addEventListener("change", async (event) => {
       const file = event.target.files[0];
@@ -1584,7 +1895,7 @@
         if (!Array.isArray(restored.expenses) || !Array.isArray(restored.fixed)) {
           throw new Error("bad backup");
         }
-        data = { expenses: restored.expenses, fixed: restored.fixed };
+        data = { expenses: restored.expenses, fixed: restored.fixed, deletedFixedMonths: restored.deletedFixedMonths || [] };
         saveData();
         const firstExpense = data.expenses[0];
         if (firstExpense && firstExpense.date) activeMonth = firstExpense.date.slice(0, 7);
